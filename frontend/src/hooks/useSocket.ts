@@ -237,6 +237,7 @@ export function useSocket() {
   const sellHouse = (tileId: number) => emit('sell_house', { tileId });
   const mortgageTile = (tileId: number) => emit('mortgage_tile', { tileId });
   const unmortgageTile = (tileId: number) => emit('unmortgage_tile', { tileId });
+  const sellDeed = (tileId: number) => emit('sell_deed', { tileId });
   const jailAction = (method: 'pay' | 'use_card') => emit('jail_action', { method });
   const settleFunds = () => emit('settle_funds');
   const declineBuy = () => emit('decline_buy');
@@ -278,6 +279,7 @@ export function useSocket() {
     sellHouse,
     mortgageTile,
     unmortgageTile,
+    sellDeed,
     jailAction,
     settleFunds,
     declineBuy,

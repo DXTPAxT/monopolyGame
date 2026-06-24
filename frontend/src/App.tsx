@@ -36,6 +36,7 @@ export default function App() {
     sellHouse,
     mortgageTile,
     unmortgageTile,
+    sellDeed,
     roomSettings,
     selectSkin,
     updateRoomSettings,
@@ -168,6 +169,7 @@ export default function App() {
                   sellHouse={sellHouse}
                   mortgageTile={mortgageTile}
                   unmortgageTile={unmortgageTile}
+                  sellDeed={sellDeed}
                 />
               </div>
 

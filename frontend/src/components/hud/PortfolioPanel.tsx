@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Briefcase, Home, Banknote, Lock, Unlock, ChevronDown } from 'lucide-react';
+import { Briefcase, Home, Banknote, Lock, Unlock, ChevronDown, BadgeDollarSign } from 'lucide-react';
 import type { GameState } from '../../types/game';
 import { netWorth, myProperties, currentRent } from '../../hooks/useGameSelectors';
 import { formatMoney, buildingLabel } from '../../utils/format';
@@ -12,6 +12,7 @@ interface PortfolioPanelProps {
   sellHouse: (tileId: number) => void;
   mortgageTile: (tileId: number) => void;
   unmortgageTile: (tileId: number) => void;
+  sellDeed: (tileId: number) => void;
 }
 
 const GROUP_DOT: Record<string, string> = {
@@ -21,11 +22,13 @@ const GROUP_DOT: Record<string, string> = {
 };
 
 export function PortfolioPanel({
-  gameState, playerId, isMyTurn, sellHouse, mortgageTile, unmortgageTile,
+  gameState, playerId, isMyTurn, sellHouse, mortgageTile, unmortgageTile, sellDeed,
 }: PortfolioPanelProps) {
   const [open, setOpen] = useState(true);
   const me = gameState.players.find((p) => p.id === playerId);
   if (!me) return null;
+
+  const sellDeedMode = gameState.settings.houseRules.sellDeedOutright;
 
   const props = myProperties(gameState, playerId);
   const worth = netWorth(gameState, playerId);
@@ -103,19 +106,36 @@ export function PortfolioPanel({
                         <Home size={11} aria-hidden="true" /> Bán nhà
                       </button>
                     )}
-                    {canMortgage && (
-                      <button onClick={() => mortgageTile(meta.id)}
-                        aria-label={`Cầm cố ${meta.name}`}
-                        className="flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded-lg bg-slate-700/40 text-slate-300 border border-slate-600/40 hover:bg-slate-700/60 transition">
-                        <Lock size={11} aria-hidden="true" /> Cầm cố
+
+                    {/* Chế độ bán đứt sổ đỏ (80%, không chuộc) thay cho cầm cố/chuộc */}
+                    {sellDeedMode ? (
+                      <button
+                        onClick={() => {
+                          if (window.confirm(`Bán đứt "${meta.name}"? Bạn sẽ nhận 80% giá trị và KHÔNG chuộc lại được.`)) {
+                            sellDeed(meta.id);
+                          }
+                        }}
+                        aria-label={`Bán đứt ${meta.name}`}
+                        className="flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded-lg bg-rose-600/20 text-rose-300 border border-rose-600/30 hover:bg-rose-600/30 transition">
+                        <BadgeDollarSign size={11} aria-hidden="true" /> Bán đứt
                       </button>
-                    )}
-                    {canUnmortgage && (
-                      <button onClick={() => unmortgageTile(meta.id)}
-                        aria-label={`Chuộc lại ${meta.name}`}
-                        className="flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded-lg bg-sky-600/20 text-sky-300 border border-sky-600/30 hover:bg-sky-600/30 transition">
-                        <Unlock size={11} aria-hidden="true" /> Chuộc
-                      </button>
+                    ) : (
+                      <>
+                        {canMortgage && (
+                          <button onClick={() => mortgageTile(meta.id)}
+                            aria-label={`Cầm cố ${meta.name}`}
+                            className="flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded-lg bg-slate-700/40 text-slate-300 border border-slate-600/40 hover:bg-slate-700/60 transition">
+                            <Lock size={11} aria-hidden="true" /> Cầm cố
+                          </button>
+                        )}
+                        {canUnmortgage && (
+                          <button onClick={() => unmortgageTile(meta.id)}
+                            aria-label={`Chuộc lại ${meta.name}`}
+                            className="flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded-lg bg-sky-600/20 text-sky-300 border border-sky-600/30 hover:bg-sky-600/30 transition">
+                            <Unlock size={11} aria-hidden="true" /> Chuộc
+                          </button>
+                        )}
+                      </>
                     )}
                   </div>
                 )}

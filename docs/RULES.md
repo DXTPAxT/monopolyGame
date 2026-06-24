@@ -70,7 +70,8 @@ Mỗi lượt của người chơi diễn ra theo thứ tự:
 
 - Tung đôi → di chuyển và giải quyết ô như bình thường, **sau đó được tung lại** một lần nữa.
 - **3 lần đôi liên tiếp trong cùng một lượt** → người chơi **bị đưa thẳng vào tù ngay lập tức** (không di chuyển theo lần tung thứ 3, không giải quyết ô đó).
-- Khi đang **ở trong tù**, tung đôi là cách thoát ra (xem §6) — nhưng **KHÔNG** được tung lại sau khi thoát tù bằng đôi.
+- Khi đang **ở trong tù**, tung đôi là cách thoát ra (xem §6) — nhưng **KHÔNG** được tung lại sau khi thoát tù bằng đôi. *(House rule "Ra tù bằng đôi được đi tiếp" — §11 — có thể bật để cho phép tung lại; mặc định tắt.)*
+- **Cảnh báo:** sau khi đổ đôi **lần thứ 2 liên tiếp**, hệ thống nhắc người chơi rằng đổ đôi lần nữa sẽ vào tù.
 
 ---
 
@@ -180,11 +181,15 @@ Theo số nhà ga **cùng một chủ** sở hữu:
 - **Chuộc lại (unmortgage):** trả **giá cầm cố + 10% lãi**.
 - Tài sản đang cầm cố không thể được chuyển nhượng.
 
+> **House rule "Bán đứt sổ đỏ" (§11):** khi bật, cơ chế cầm cố/chuộc bị **thay** bằng **bán đứt** — bán nhận **80%** tổng giá trị (giá đất + công trình; khách sạn quy 5 căn = 4 nhà + 1 KS), ô trở về ngân hàng và **không chuộc lại được**.
+
 ---
 
 ## 9. Phá Sản (Bankruptcy)
 
-Xảy ra khi người chơi nợ nhiều hơn khả năng huy động (kể cả sau khi bán hết nhà & cầm cố hết đất).
+Xảy ra khi người chơi nợ nhiều hơn khả năng huy động (kể cả sau khi bán hết nhà & cầm cố/bán đứt hết đất).
+
+> **Quan trọng:** nếu tiền mặt không đủ **nhưng** tổng tài sản bán/cầm cố được vẫn đủ trả nợ, người chơi **chưa bị ép phá sản** — game chuyển sang trạng thái *"gom tiền trả nợ"* để họ bán nhà/cầm cố (hoặc bán đứt) rồi bấm thanh toán. Chỉ khi thật sự không đủ mới hiện nút tuyên bố phá sản.
 
 - **Nợ một người chơi khác:** toàn bộ tài sản (tiền mặt, đất — kèm trạng thái cầm cố) chuyển cho **chủ nợ**. Chủ nợ phải trả ngay 10% phí cho các đất đang cầm cố nhận về (hoặc giữ nguyên trạng thái cầm cố).
 - **Nợ ngân hàng (thuế/phạt):** nhà bị trả về kho, đất **vẫn thuộc ngân hàng** (không đấu giá).
@@ -222,6 +227,8 @@ Mặc định **TẮT** (ván chuẩn). Host bật khi tạo phòng:
 | **Chế độ Nhanh** | Tiền khởi điểm thấp hơn (vd $1000) + bật turn timer ngắn. |
 | **Chế độ Hỗn Loạn** | Bật jackpot + Double GO + nhiều thẻ sự kiện hơn. |
 | **Turn timer** | Mỗi lượt có giới hạn thời gian; hết giờ auto-pass (tung tự động nếu chưa tung). |
+| **Ra tù bằng đôi được đi tiếp** | Thoát tù bằng đôi vẫn được tung thêm lượt (khác luật chuẩn ở §4). |
+| **Bán đứt sổ đỏ** | Thay cầm cố/chuộc bằng **bán đứt**: nhận **80%** (giá đất + công trình), ô về ngân hàng, **không chuộc lại được** (xem §9). |
 
 ---
 

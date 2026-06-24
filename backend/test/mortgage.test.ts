@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { mortgage, unmortgage } from '../src/game/engine/mortgage';
+import { mortgage, unmortgage, sellDeed } from '../src/game/engine/mortgage';
 import { GameState, TileState, Player } from '../src/game/types';
 
 // brown group = tiles {1,3}, price 60. Helpers to build a minimal state.
@@ -62,5 +62,57 @@ describe('mortgage', () => {
     const res = unmortgage(state, 1);
     expect(res.ok).toBe(false);
     expect(state.tiles.find((t) => t.id === 1)!.mortgaged).toBe(true);
+  });
+});
+
+describe('sellDeed (bán đứt sổ đỏ — 80%, không chuộc)', () => {
+  // tile 1: price=60, housePrice=50
+  it('refunds 80% of land price for an empty lot and returns tile to bank', () => {
+    const state = makeState([tile(1, 'p1'), tile(3, 'p1')], 1000);
+    const res = sellDeed(state, 1);
+    expect(res.ok).toBe(true);
+    // floor(0.8 * 60) = 48
+    expect(state.players[0].money).toBe(1048);
+    const ts = state.tiles.find((t) => t.id === 1)!;
+    expect(ts.ownerId).toBeNull();
+    expect(ts.houses).toBe(0);
+    expect(ts.hotel).toBe(false);
+    expect(ts.mortgaged).toBe(false);
+  });
+
+  it('refunds 80% of land + houses value', () => {
+    const state = makeState([tile(1, 'p1', { houses: 2 }), tile(3, 'p1')], 1000);
+    const res = sellDeed(state, 1);
+    expect(res.ok).toBe(true);
+    // floor(0.8 * (60 + 2*50)) = floor(0.8 * 160) = 128
+    expect(state.players[0].money).toBe(1128);
+    expect(state.tiles.find((t) => t.id === 1)!.ownerId).toBeNull();
+  });
+
+  it('refunds 80% of land + hotel (5 house-units) value', () => {
+    const state = makeState([tile(1, 'p1', { hotel: true }), tile(3, 'p1')], 1000);
+    const res = sellDeed(state, 1);
+    expect(res.ok).toBe(true);
+    // floor(0.8 * (60 + 5*50)) = floor(0.8 * 310) = 248
+    expect(state.players[0].money).toBe(1248);
+    const ts = state.tiles.find((t) => t.id === 1)!;
+    expect(ts.ownerId).toBeNull();
+    expect(ts.hotel).toBe(false);
+  });
+
+  it('also credits a mortgaged tile at 80% of land (debt cleared, no buildings)', () => {
+    const state = makeState([tile(1, 'p1', { mortgaged: true }), tile(3, 'p1')], 1000);
+    const res = sellDeed(state, 1);
+    expect(res.ok).toBe(true);
+    // floor(0.8 * 60) = 48
+    expect(state.players[0].money).toBe(1048);
+    expect(state.tiles.find((t) => t.id === 1)!.ownerId).toBeNull();
+  });
+
+  it('fails when not the owner', () => {
+    const state = makeState([tile(1, 'p2'), tile(3, 'p2')], 1000);
+    const res = sellDeed(state, 1);
+    expect(res.ok).toBe(false);
+    expect(state.players[0].money).toBe(1000);
   });
 });

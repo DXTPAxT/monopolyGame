@@ -98,6 +98,8 @@ export interface HouseRules {
   freeParkingJackpot: boolean;
   doubleGo: boolean;
   turnTimerSec: number | null; // null = tắt
+  allowJailDoublesContinue: boolean; // true = ra tù bằng đôi vẫn được tung lại (house rule, mặc định false = luật chuẩn)
+  sellDeedOutright: boolean;         // true = bán đứt sổ đỏ (80%, không chuộc) thay cho cầm cố
 }
 export interface RoomSettings {
   startingMoney: number;
@@ -108,12 +110,14 @@ export interface RoomSettings {
 }
 
 export const DEFAULT_ROOM_SETTINGS: RoomSettings = {
-  startingMoney: 1500,
+  startingMoney: 2000,
   gameMode: 'classic',
   houseRules: {
     freeParkingJackpot: false,
     doubleGo: false,
     turnTimerSec: null,
+    allowJailDoublesContinue: false,
+    sellDeedOutright: false,
   },
   boardSkin: 'neon',
   diceSkin: 'neon',

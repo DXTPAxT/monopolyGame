@@ -73,7 +73,7 @@ function makeState(
     settings: {
       startingMoney: 1500,
       gameMode: 'classic',
-      houseRules: { freeParkingJackpot: false, doubleGo: false, turnTimerSec: null },
+      houseRules: { freeParkingJackpot: false, doubleGo: false, turnTimerSec: null, allowJailDoublesContinue: false, sellDeedOutright: false },
       boardSkin: 'neon',
       diceSkin: 'neon',
     },
@@ -140,6 +140,24 @@ describe('liquidatableWorth', () => {
     const state = makeState([player], tiles);
     // 100 + 55 = 155
     expect(liquidatableWorth(state, 'p1')).toBe(155);
+  });
+
+  it('uses 80% of land+buildings when sellDeedOutright is on (empty lot)', () => {
+    const player = makePlayer({ id: 'p1', money: 100 });
+    const tile = makeTileState({ id: 1, ownerId: 'p1', houses: 0 });
+    const state = makeState([player], [tile]);
+    state.settings.houseRules.sellDeedOutright = true;
+    // 100 + floor(0.8 * 60) = 100 + 48 = 148
+    expect(liquidatableWorth(state, 'p1')).toBe(148);
+  });
+
+  it('uses 80% of land+houses when sellDeedOutright is on', () => {
+    const player = makePlayer({ id: 'p1', money: 100 });
+    const tile = makeTileState({ id: 1, ownerId: 'p1', houses: 2 });
+    const state = makeState([player], [tile]);
+    state.settings.houseRules.sellDeedOutright = true;
+    // 100 + floor(0.8 * (60 + 2*50)) = 100 + 128 = 228
+    expect(liquidatableWorth(state, 'p1')).toBe(228);
   });
 });
 

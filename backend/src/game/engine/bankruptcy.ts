@@ -4,6 +4,7 @@
 
 import { GameState, PendingPayment } from '../types';
 import { getTile } from '../board';
+import { buildingValue } from './mortgage';
 
 export interface BankruptcyResult {
   ok: boolean;
@@ -26,11 +27,19 @@ export function liquidatableWorth(state: GameState, playerId: string): number {
   if (!player) return 0;
 
   let worth = player.money;
+  const sellDeedMode = state.settings?.houseRules?.sellDeedOutright ?? false;
 
   for (const tileState of state.tiles) {
     if (tileState.ownerId !== playerId) continue;
 
     const meta = getTile(tileState.id);
+
+    if (sellDeedMode) {
+      // Chế độ bán đứt: 80% (giá đất + công trình) trong một lần
+      const total = (meta.price || 0) + buildingValue(meta.housePrice || 0, tileState);
+      worth += Math.floor(total * 0.8);
+      continue;
+    }
 
     // Mortgage value (only if not already mortgaged)
     if (!tileState.mortgaged && meta.price) {

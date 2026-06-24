@@ -60,6 +60,14 @@ Trong đó [X] là mục bạn muốn làm tiếp (xem "VIỆC TIẾP THEO" bên
 - **T4.6 Perf 3D (Dice3D)**: `frameloop="demand"` + driver `invalidate()` (chỉ render khi đang lăn/settle, hết hao 60fps lúc đứng yên); dispose material/texture khi đổi skin/unmount (hết leak); `gl.powerPreference:'high-performance'`, `shadows={false}`.
 - Verify: FE `tsc -b` + `vite build` exit 0.
 
+## ĐÃ XONG THÊM (2026-06-24, đợt "sửa lỗi + house-rules")
+Spec: `docs/specs/2026-06-24-fixes-and-houserules-design.md`. Backend **159 test xanh**, tsc sạch, boot OK; FE `tsc -b` + `vite build` exit 0.
+- **🐛 Ép thua dù còn tài sản:** `setDebt` (gameEngine) nay rẽ nhánh theo `liquidatableWorth` — đủ tài sản bán/cầm cố → `must_raise_funds` (không mở modal phá sản che màn hình, để gom tiền rồi thanh toán); chỉ thật sự cạn mới `bankruptcy_decision`. Test: `test/debtRouting.integration.test.ts`. *(Gốc lỗi: modal phá sản cũ chỉ có nút "Phá Sản", che `CenterStageControls`.)*
+- **🐛 Vào tù "vô cớ":** xác nhận bằng test KHÔNG có bug state (doublesCount reset đúng) — là luật 3-đôi-liên-tiếp gây hiểu nhầm. Thêm **cảnh báo** khi đổ đôi lần 2. Test: `test/doublesWarning.integration.test.ts`.
+- **⚙️ House rule `allowJailDoublesContinue`** (mặc định tắt = luật chuẩn): ra tù bằng đôi được tung lại. Test: `test/jailDoubles.integration.test.ts`.
+- **⚙️ House rule `sellDeedOutright`** (mặc định tắt): bán đứt sổ đỏ 80% (đất+công trình, KS=5 căn), ô về bank, không chuộc. Engine `sellDeed` (mortgage.ts) + `liquidatableWorth` theo 80% khi bật; facade `sellDeedTile` + socket `sell_deed`; FE: toggle sảnh + nút "Bán đứt" ở PortfolioPanel (thay cầm cố/chuộc). Test trong `test/mortgage.test.ts`, `test/bankruptcy.test.ts`.
+- `HouseRules` thêm 2 cờ (BE+FE types, DEFAULT, preset classic, lobby). `docs/RULES.md` cập nhật §4, §8, §9, §11.
+
 ## VIỆC TIẾP THEO (ưu tiên)
 1. **Kiểm thử multiplayer thật (việc chính còn lại)**: mở 2 tab, chạy toàn bộ luồng mới — xây nhà (lần 1→4 nhà, lần 2→KS), cầm cố, ra tù, phá sản gom tiền, doubles, **reconnect** (đóng tab rồi mở lại trong 60s), **turn-timer** (bật mode Nhanh), **thắng nhanh (3 nhóm màu / trọn 1 cạnh / cả 4 nhà ga)**. Sửa bug phát sinh.
 2. **Responsive/mobile** pass (T4.4 — layout đang tối ưu desktop). *T4.5/T4.6 đã xong.*

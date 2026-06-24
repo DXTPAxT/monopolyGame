@@ -22,6 +22,7 @@ import {
   sellHouse,
   mortgageTile,
   unmortgageTile,
+  sellDeedTile,
   leaveJail,
   settleRaisedFunds,
   passBuy,
@@ -407,6 +408,12 @@ io.on('connection', (socket) => {
     broadcast(roomCode, event);
   });
 
+  socket.on('sell_deed', ({ roomCode, tileId }) => {
+    const room = requireActive(roomCode); if (!room) return;
+    const { event } = sellDeedTile(room.gameState!, tileId);
+    broadcast(roomCode, event);
+  });
+
   // --- Ra tù chủ động ---
   socket.on('jail_action', ({ roomCode, method }: { roomCode: string; method: 'pay' | 'use_card' }) => {
     const room = requireActive(roomCode); if (!room) return;
@@ -457,17 +464,24 @@ io.on('connection', (socket) => {
       houseRules: { ...room.settings.houseRules, ...(settings.houseRules || {}) },
     };
     // Khi đổi game mode → áp preset (host có thể tinh chỉnh lại từng toggle sau đó)
+    // Nếu host đồng thời gửi startingMoney tùy chỉnh thì giữ nguyên, không ghi đè preset
     if (settings.gameMode) {
+      const keepCustomMoney = settings.startingMoney !== undefined;
       if (settings.gameMode === 'fast') {
-        room.settings.startingMoney = 1000;
+        if (!keepCustomMoney) room.settings.startingMoney = 1000;
         room.settings.houseRules.turnTimerSec = 30;
       } else if (settings.gameMode === 'chaos') {
-        room.settings.startingMoney = 1500;
+        if (!keepCustomMoney) room.settings.startingMoney = 2000;
         room.settings.houseRules.freeParkingJackpot = true;
         room.settings.houseRules.doubleGo = true;
       } else {
-        room.settings.startingMoney = 1500;
-        room.settings.houseRules = { freeParkingJackpot: false, doubleGo: false, turnTimerSec: null };
+        if (!keepCustomMoney) room.settings.startingMoney = 2000;
+        room.settings.houseRules = {
+          ...room.settings.houseRules,
+          freeParkingJackpot: false,
+          doubleGo: false,
+          turnTimerSec: null,
+        };
       }
     }
     io.to(roomCode.toUpperCase()).emit('room_state_update', {

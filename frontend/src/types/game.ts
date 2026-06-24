@@ -97,6 +97,8 @@ export interface HouseRules {
   freeParkingJackpot: boolean;
   doubleGo: boolean;
   turnTimerSec: number | null;
+  allowJailDoublesContinue: boolean;
+  sellDeedOutright: boolean;
 }
 export interface RoomSettings {
   startingMoney: number;

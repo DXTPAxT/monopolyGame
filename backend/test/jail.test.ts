@@ -37,7 +37,7 @@ function makeState(player: Player, overrides: Partial<GameState> = {}): GameStat
     settings: {
       startingMoney: 1500,
       gameMode: 'classic',
-      houseRules: { freeParkingJackpot: false, doubleGo: false, turnTimerSec: null },
+      houseRules: { freeParkingJackpot: false, doubleGo: false, turnTimerSec: null, allowJailDoublesContinue: false, sellDeedOutright: false },
       boardSkin: 'neon',
       diceSkin: 'neon',
     },

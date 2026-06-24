@@ -13,12 +13,12 @@ import { registerRoll } from './engine/dice';
 import { moveBy } from './engine/movement';
 import { calcRent } from './engine/rent';
 import { buildHouse as buildHouseModule, sellHouse as sellHouseModule } from './engine/build';
-import { mortgage as mortgageModule, unmortgage as unmortgageModule } from './engine/mortgage';
+import { mortgage as mortgageModule, unmortgage as unmortgageModule, sellDeed as sellDeedModule } from './engine/mortgage';
 import { goToJail, jailAction } from './engine/jail';
 import { applyCard } from './cards/cardEngine';
 import { CHANCE_CARDS } from './cards/chance';
 import { COMMUNITY_CARDS } from './cards/community';
-import { declareBankruptcy as bankruptcyModule, settleDebt as settleDebtModule } from './engine/bankruptcy';
+import { declareBankruptcy as bankruptcyModule, settleDebt as settleDebtModule, liquidatableWorth } from './engine/bankruptcy';
 import { endTurn as endTurnModule } from './engine/turn';
 import { checkInstantWin } from './engine/winConditions';
 
@@ -83,12 +83,24 @@ function openBuildModal(state: GameState, tileId: number) {
   state.modalPayload = { tileId };
 }
 
-/** Thiết lập trạng thái nợ không trả nổi → mở modal phá sản (bridge với frontend hiện tại). */
+/**
+ * Thiết lập trạng thái nợ khi tiền mặt không đủ. Nếu người chơi CÒN có thể bán/cầm cố
+ * (liquidatableWorth ≥ nợ) → must_raise_funds (KHÔNG mở modal phá sản che màn hình, để
+ * họ vào panel "Tài sản của tôi" gom tiền rồi bấm thanh toán). Chỉ khi thật sự không cứu
+ * được mới mở modal phá sản.
+ */
 function setDebt(state: GameState, player: Player, amount: number, toPlayerId: string | 'bank', purpose: 'rent' | 'tax' | 'jail_fine' | 'other') {
-  state.currentActionRequired = 'bankruptcy_decision';
   state.pendingPayment = { fromPlayerId: player.id, toPlayerId, amount, purpose };
-  state.activeModal = 'bankruptcy';
-  state.modalPayload = { amount, toPlayerId };
+
+  if (liquidatableWorth(state, player.id) >= amount) {
+    state.currentActionRequired = 'must_raise_funds';
+    state.activeModal = null;
+    state.modalPayload = null;
+  } else {
+    state.currentActionRequired = 'bankruptcy_decision';
+    state.activeModal = 'bankruptcy';
+    state.modalPayload = { amount, toPlayerId };
+  }
 }
 
 // ---------- Roll & Move ----------
@@ -109,7 +121,10 @@ export function rollDiceAndMove(state: GameState): { state: GameState; event: st
   // --- Đang ở tù: lượt tung này chỉ để thử thoát, KHÔNG tính doubles-again ---
   if (player.inJail) {
     const r = jailAction(state, 'roll');
-    state.rolledDoubles = false; // thoát tù bằng đôi không được đi thêm lượt
+    // Luật chuẩn: thoát tù bằng đôi KHÔNG được đi thêm lượt.
+    // House rule allowJailDoublesContinue: cho đi tiếp nếu thoát bằng đôi.
+    const escapedByDouble = r.freed && state.dice[0] === state.dice[1];
+    state.rolledDoubles = escapedByDouble && state.settings.houseRules.allowJailDoublesContinue;
     log += ' ' + r.events.join(' ');
     if (!r.freed) {
       state.activeModal = 'jail';
@@ -145,6 +160,10 @@ export function rollDiceAndMove(state: GameState): { state: GameState; event: st
   state.hasMoved = true;
   const tile = getTile(player.position);
   log += ` Đi vào ô [${tile.name}].`;
+  // Cảnh báo đổ đôi liên tiếp (lần 2) — để người chơi biết lần 3 sẽ vào tù.
+  if (state.doublesCount === 2) {
+    log += ' ⚠️ Đổ đôi lần thứ 2 liên tiếp — nếu đổ đôi lần nữa bạn sẽ bị vào tù!';
+  }
   resolveTileLanding(state, player, tile);
 
   state.logs.push(log);
@@ -444,6 +463,18 @@ export function unmortgageTile(state: GameState, tileId: number): { state: GameS
   const res = unmortgageModule(state, tileId);
   if (!res.ok) return { state, event: res.error || 'Không thể chuộc.' };
   res.events.forEach((e) => state.logs.push(e));
+  return { state, event: res.events[0] };
+}
+
+/** Bán đứt sổ đỏ (chỉ khi house rule sellDeedOutright bật): nhận 80%, ô về ngân hàng. */
+export function sellDeedTile(state: GameState, tileId: number): { state: GameState; event: string } {
+  if (!state.settings.houseRules.sellDeedOutright) {
+    return { state, event: 'Chế độ bán đứt sổ đỏ chưa được bật.' };
+  }
+  const res = sellDeedModule(state, tileId);
+  if (!res.ok) return { state, event: res.error || 'Không thể bán đứt.' };
+  res.events.forEach((e) => state.logs.push(e));
+  // Bán đứt có thể giúp đủ tiền trả nợ đang treo
   return { state, event: res.events[0] };
 }
 

@@ -35,9 +35,9 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
 }
 
 const DEFAULT_SETTINGS: RoomSettings = {
-  startingMoney: 1500,
+  startingMoney: 2000,
   gameMode: 'classic',
-  houseRules: { freeParkingJackpot: false, doubleGo: false, turnTimerSec: null },
+  houseRules: { freeParkingJackpot: false, doubleGo: false, turnTimerSec: null, allowJailDoublesContinue: false, sellDeedOutright: false },
   boardSkin: 'neon',
   diceSkin: 'neon',
 };
@@ -61,6 +61,8 @@ export function GameLobby({
   const [code, setCode] = useState('');
   const [chatMsg, setChatMsg] = useState('');
   const [copied, setCopied] = useState(false);
+  const [customMoneyEnabled, setCustomMoneyEnabled] = useState(false);
+  const [customMoneyInput, setCustomMoneyInput] = useState(2000);
 
   const isHost = playerId === hostId;
   const settings = roomSettings ?? DEFAULT_SETTINGS;
@@ -257,7 +259,13 @@ export function GameLobby({
                   {(['classic', 'fast', 'chaos'] as const).map((m) => (
                     <button
                       key={m}
-                      onClick={() => updateRoomSettings({ gameMode: m })}
+                      onClick={() => {
+                        if (customMoneyEnabled) {
+                          updateRoomSettings({ gameMode: m, startingMoney: customMoneyInput });
+                        } else {
+                          updateRoomSettings({ gameMode: m });
+                        }
+                      }}
                       className={`flex-1 text-xs font-bold py-1.5 rounded-lg border transition ${
                         settings.gameMode === m
                           ? 'border-indigo-500 bg-indigo-500/20 text-indigo-300'
@@ -269,6 +277,41 @@ export function GameLobby({
                   ))}
                 </div>
                 <div className="space-y-1.5">
+                  <Toggle
+                    label="Tùy chỉnh tiền khởi điểm"
+                    checked={customMoneyEnabled}
+                    onChange={(v) => {
+                      setCustomMoneyEnabled(v);
+                      if (!v) {
+                        const preset = settings.gameMode === 'fast' ? 1000 : 2000;
+                        setCustomMoneyInput(preset);
+                        updateRoomSettings({ startingMoney: preset });
+                      } else {
+                        updateRoomSettings({ startingMoney: customMoneyInput });
+                      }
+                    }}
+                  />
+                  {customMoneyEnabled && (
+                    <div className="flex items-center gap-2 pl-1">
+                      <span className="text-xs text-slate-400 shrink-0">Số tiền:</span>
+                      <input
+                        type="number"
+                        min={500}
+                        max={20000}
+                        step={500}
+                        value={customMoneyInput}
+                        onChange={(e) => setCustomMoneyInput(Number(e.target.value))}
+                        onBlur={() => updateRoomSettings({ startingMoney: Math.max(500, Math.min(20000, customMoneyInput)) })}
+                        className="w-full bg-slate-950/80 border border-slate-700 rounded-lg px-2.5 py-1 text-slate-100 text-xs font-bold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      />
+                      <span className="text-xs text-emerald-400 font-bold shrink-0">$</span>
+                    </div>
+                  )}
+                  {!customMoneyEnabled && (
+                    <p className="text-[10px] text-slate-500 pl-1">
+                      Mặc định: <span className="text-slate-300 font-semibold">${settings.startingMoney.toLocaleString()}</span>
+                    </p>
+                  )}
                   <Toggle
                     label="Free Parking jackpot"
                     checked={settings.houseRules.freeParkingJackpot}
@@ -283,6 +326,16 @@ export function GameLobby({
                     label="Đồng hồ lượt (30s)"
                     checked={settings.houseRules.turnTimerSec !== null}
                     onChange={(v) => updateRoomSettings({ houseRules: { ...settings.houseRules, turnTimerSec: v ? 30 : null } })}
+                  />
+                  <Toggle
+                    label="Ra tù bằng đôi được đi tiếp"
+                    checked={settings.houseRules.allowJailDoublesContinue}
+                    onChange={(v) => updateRoomSettings({ houseRules: { ...settings.houseRules, allowJailDoublesContinue: v } })}
+                  />
+                  <Toggle
+                    label="Bán đứt sổ đỏ (80%, không chuộc)"
+                    checked={settings.houseRules.sellDeedOutright}
+                    onChange={(v) => updateRoomSettings({ houseRules: { ...settings.houseRules, sellDeedOutright: v } })}
                   />
                 </div>
 

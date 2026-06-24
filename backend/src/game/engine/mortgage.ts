@@ -1,7 +1,7 @@
 // ============================================================
 // Cầm cố / chuộc đất — docs/RULES.md §9
 // ============================================================
-import { GameState } from '../types';
+import { GameState, TileState } from '../types';
 import { getTile, getGroupTiles, isOwnable } from '../board';
 
 export interface MortgageResult {
@@ -80,5 +80,43 @@ export function unmortgage(state: GameState, tileId: number): MortgageResult {
   return {
     ok: true,
     events: [`${player.name} đã chuộc lại [${meta.name}] với giá $${cost}.`],
+  };
+}
+
+/** Giá trị công trình đã đầu tư trên 1 ô (đơn vị tiền). Khách sạn = 5 căn (4 nhà + 1 KS). */
+export function buildingValue(housePrice: number, tileState: TileState): number {
+  if (tileState.hotel) return 5 * housePrice;
+  return tileState.houses * housePrice;
+}
+
+/**
+ * Bán đứt sổ đỏ (house rule sellDeedOutright): nhận 80% tổng giá trị
+ * (giá đất + công trình), ô trở về ngân hàng, KHÔNG chuộc lại được.
+ */
+export function sellDeed(state: GameState, tileId: number): MortgageResult {
+  const player = activePlayer(state);
+  const tileState = state.tiles.find((t) => t.id === tileId);
+  if (!tileState) return { ok: false, error: 'Ô cờ không hợp lệ.', events: [] };
+
+  if (!isOwnable(tileId)) {
+    return { ok: false, error: 'Ô này không thể bán.', events: [] };
+  }
+  if (tileState.ownerId !== player.id) {
+    return { ok: false, error: 'Bạn không sở hữu tài sản này.', events: [] };
+  }
+
+  const meta = getTile(tileId);
+  const total = (meta.price || 0) + buildingValue(meta.housePrice || 0, tileState);
+  const refund = Math.floor(total * 0.8);
+  player.money += refund;
+
+  tileState.ownerId = null;
+  tileState.houses = 0;
+  tileState.hotel = false;
+  tileState.mortgaged = false;
+
+  return {
+    ok: true,
+    events: [`${player.name} đã bán đứt [${meta.name}] và nhận $${refund} (không chuộc lại được).`],
   };
 }
