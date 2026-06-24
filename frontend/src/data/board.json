@@ -1,0 +1,324 @@
+[
+  {
+    "id": 0,
+    "name": "Bắt đầu (GO)",
+    "type": "go",
+    "group": "special",
+    "description": "Nhận $200 khi đi qua"
+  },
+  {
+    "id": 1,
+    "name": "Hồ Cốc",
+    "type": "property",
+    "price": 60,
+    "rent": [2, 10, 30, 90, 160, 250],
+    "housePrice": 50,
+    "group": "brown"
+  },
+  {
+    "id": 2,
+    "name": "Quỹ Cộng Đồng",
+    "type": "community_chest",
+    "group": "special"
+  },
+  {
+    "id": 3,
+    "name": "Vũng Tàu",
+    "type": "property",
+    "price": 60,
+    "rent": [4, 20, 60, 180, 320, 450],
+    "housePrice": 50,
+    "group": "brown"
+  },
+  {
+    "id": 4,
+    "name": "Thuế Thu Nhập",
+    "type": "tax",
+    "price": 200,
+    "group": "special"
+  },
+  {
+    "id": 5,
+    "name": "Nhà ga Sài Gòn",
+    "type": "railroad",
+    "price": 200,
+    "rent": [25, 50, 100, 200],
+    "group": "railroad"
+  },
+  {
+    "id": 6,
+    "name": "Phú Quốc",
+    "type": "property",
+    "price": 100,
+    "rent": [6, 30, 90, 270, 400, 550],
+    "housePrice": 50,
+    "group": "light_blue"
+  },
+  {
+    "id": 7,
+    "name": "Cơ Hội",
+    "type": "chance",
+    "group": "special"
+  },
+  {
+    "id": 8,
+    "name": "Nha Trang",
+    "type": "property",
+    "price": 100,
+    "rent": [6, 30, 90, 270, 400, 550],
+    "housePrice": 50,
+    "group": "light_blue"
+  },
+  {
+    "id": 9,
+    "name": "Đà Lạt",
+    "type": "property",
+    "price": 120,
+    "rent": [8, 40, 100, 300, 450, 600],
+    "housePrice": 50,
+    "group": "light_blue"
+  },
+  {
+    "id": 10,
+    "name": "Nhà Tù (Jail)",
+    "type": "jail",
+    "group": "special",
+    "description": "Chỉ Thăm Viếng hoặc Đi Tù"
+  },
+  {
+    "id": 11,
+    "name": "Mũi Né",
+    "type": "property",
+    "price": 140,
+    "rent": [10, 50, 150, 450, 625, 750],
+    "housePrice": 100,
+    "group": "pink"
+  },
+  {
+    "id": 12,
+    "name": "Công ty Điện lực",
+    "type": "utility",
+    "price": 150,
+    "group": "utility"
+  },
+  {
+    "id": 13,
+    "name": "Phan Thiết",
+    "type": "property",
+    "price": 140,
+    "rent": [10, 50, 150, 450, 625, 750],
+    "housePrice": 100,
+    "group": "pink"
+  },
+  {
+    "id": 14,
+    "name": "Cần Thơ",
+    "type": "property",
+    "price": 160,
+    "rent": [12, 60, 180, 500, 700, 900],
+    "housePrice": 100,
+    "group": "pink"
+  },
+  {
+    "id": 15,
+    "name": "Nhà ga Đà Nẵng",
+    "type": "railroad",
+    "price": 200,
+    "rent": [25, 50, 100, 200],
+    "group": "railroad"
+  },
+  {
+    "id": 16,
+    "name": "Phong Nha",
+    "type": "property",
+    "price": 180,
+    "rent": [14, 70, 200, 550, 750, 950],
+    "housePrice": 100,
+    "group": "orange"
+  },
+  {
+    "id": 17,
+    "name": "Quỹ Cộng Đồng",
+    "type": "community_chest",
+    "group": "special"
+  },
+  {
+    "id": 18,
+    "name": "Hội An",
+    "type": "property",
+    "price": 180,
+    "rent": [14, 70, 200, 550, 750, 950],
+    "housePrice": 100,
+    "group": "orange"
+  },
+  {
+    "id": 19,
+    "name": "Cố đô Huế",
+    "type": "property",
+    "price": 200,
+    "rent": [16, 80, 220, 600, 800, 1000],
+    "housePrice": 100,
+    "group": "orange"
+  },
+  {
+    "id": 20,
+    "name": "Bãi Đỗ Xe Miễn Phí",
+    "type": "parking",
+    "group": "special",
+    "description": "Nghỉ ngơi không mất tiền"
+  },
+  {
+    "id": 21,
+    "name": "Đồ Sơn",
+    "type": "property",
+    "price": 220,
+    "rent": [18, 90, 250, 700, 875, 1050],
+    "housePrice": 150,
+    "group": "red"
+  },
+  {
+    "id": 22,
+    "name": "Cơ Hội",
+    "type": "chance",
+    "group": "special"
+  },
+  {
+    "id": 23,
+    "name": "Cát Bà",
+    "type": "property",
+    "price": 220,
+    "rent": [18, 90, 250, 700, 875, 1050],
+    "housePrice": 150,
+    "group": "red"
+  },
+  {
+    "id": 24,
+    "name": "Vịnh Hạ Long",
+    "type": "property",
+    "price": 240,
+    "rent": [20, 100, 300, 750, 925, 1100],
+    "housePrice": 150,
+    "group": "red"
+  },
+  {
+    "id": 25,
+    "name": "Nhà ga Hà Nội",
+    "type": "railroad",
+    "price": 200,
+    "rent": [25, 50, 100, 200],
+    "group": "railroad"
+  },
+  {
+    "id": 26,
+    "name": "Tràng An",
+    "type": "property",
+    "price": 260,
+    "rent": [22, 110, 330, 800, 975, 1150],
+    "housePrice": 150,
+    "group": "yellow"
+  },
+  {
+    "id": 27,
+    "name": "Tam Cốc",
+    "type": "property",
+    "price": 260,
+    "rent": [22, 110, 330, 800, 975, 1150],
+    "housePrice": 150,
+    "group": "yellow"
+  },
+  {
+    "id": 28,
+    "name": "Nhà máy Nước sạch",
+    "type": "utility",
+    "price": 150,
+    "group": "utility"
+  },
+  {
+    "id": 29,
+    "name": "Sa Pa",
+    "type": "property",
+    "price": 280,
+    "rent": [24, 120, 360, 850, 1025, 1200],
+    "housePrice": 150,
+    "group": "yellow"
+  },
+  {
+    "id": 30,
+    "name": "Vào Tù (Go To Jail)",
+    "type": "go_to_jail",
+    "group": "special",
+    "description": "Di chuyển trực tiếp đến Nhà Tù"
+  },
+  {
+    "id": 31,
+    "name": "Hồ Gươm",
+    "type": "property",
+    "price": 300,
+    "rent": [26, 130, 390, 900, 1100, 1275],
+    "housePrice": 200,
+    "group": "green"
+  },
+  {
+    "id": 32,
+    "name": "Phố cổ Hà Nội",
+    "type": "property",
+    "price": 300,
+    "rent": [26, 130, 390, 900, 1100, 1275],
+    "housePrice": 200,
+    "group": "green"
+  },
+  {
+    "id": 33,
+    "name": "Quỹ Cộng Đồng",
+    "type": "community_chest",
+    "group": "special"
+  },
+  {
+    "id": 34,
+    "name": "Hồ Tây",
+    "type": "property",
+    "price": 320,
+    "rent": [28, 150, 450, 1000, 1200, 1400],
+    "housePrice": 200,
+    "group": "green"
+  },
+  {
+    "id": 35,
+    "name": "Nhà ga Hải Phòng",
+    "type": "railroad",
+    "price": 200,
+    "rent": [25, 50, 100, 200],
+    "group": "railroad"
+  },
+  {
+    "id": 36,
+    "name": "Cơ Hội",
+    "type": "chance",
+    "group": "special"
+  },
+  {
+    "id": 37,
+    "name": "Đường Nguyễn Huệ",
+    "type": "property",
+    "price": 350,
+    "rent": [35, 175, 500, 1100, 1300, 1500],
+    "housePrice": 200,
+    "group": "dark_blue"
+  },
+  {
+    "id": 38,
+    "name": "Thuế Xa Xỉ",
+    "type": "tax",
+    "price": 100,
+    "group": "special"
+  },
+  {
+    "id": 39,
+    "name": "Dinh Độc Lập",
+    "type": "property",
+    "price": 400,
+    "rent": [50, 200, 600, 1400, 1700, 2000],
+    "housePrice": 200,
+    "group": "dark_blue"
+  }
+]
