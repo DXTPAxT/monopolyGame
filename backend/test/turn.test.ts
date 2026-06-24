@@ -37,6 +37,25 @@ describe('turn', () => {
     expect(state.rolledDoubles).toBe(false);
   });
 
+  it('clears any open modal when granting another turn for doubles', () => {
+    // Repro: roll doubles, land on rent → pay_rent modal opens. Confirming calls endTurn.
+    // The same-turn (doubles) branch must clear the modal, otherwise the stale modal
+    // stays on screen and further confirm clicks become no-ops (frozen UI).
+    const state = makeState([player('p1'), player('p2')], {
+      rolledDoubles: true,
+      activeModal: 'pay_rent',
+      modalPayload: { tileId: 5, amount: 180, ownerId: 'p2' },
+      activeCard: { type: 'chance', text: 'x' } as unknown as GameState['activeCard'],
+    });
+    const res = endTurn(state);
+    expect(res.sameTurn).toBe(true);
+    expect(state.activePlayerIndex).toBe(0);
+    expect(state.diceRolled).toBe(false);
+    expect(state.activeModal).toBeNull();
+    expect(state.modalPayload).toBeNull();
+    expect(state.activeCard).toBeNull();
+  });
+
   it('no doubles advances to the next player', () => {
     const state = makeState([player('p1'), player('p2')], { rolledDoubles: false });
     const res = endTurn(state);

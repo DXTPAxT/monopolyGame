@@ -140,19 +140,33 @@ export function Cell({ tile, tileState, playersOnTile, activePlayerId, onBuildHo
   const isHorizontalCell = edge === 'left' || edge === 'right';
   const showColorBar = tile.type === 'property' && !isCorner;
 
+  const hasHouses = !isCorner && (tileState.houses > 0 || tileState.hotel);
+  let contentPaddingClass = '';
+  if (hasHouses) {
+    if (edge === 'bottom') {
+      contentPaddingClass = 'pt-3';
+    } else if (edge === 'top') {
+      contentPaddingClass = 'pb-3';
+    } else if (edge === 'left') {
+      contentPaddingClass = 'pr-3';
+    } else if (edge === 'right') {
+      contentPaddingClass = 'pl-3';
+    }
+  }
+
   // Render Nhà / Khách Sạn theo mô hình mới (1-4 nhà hoặc 1 khách sạn) — khối 3D CSS
   const renderHouses = () => {
     if (!ownerColor || (tileState.houses === 0 && !tileState.hotel)) return null;
     let positionClass = '';
 
     if (edge === 'bottom') {
-      positionClass = 'top-1 left-1/2 -translate-x-1/2 flex-row';
+      positionClass = 'top-3 left-1/2 -translate-x-1/2 flex-row';
     } else if (edge === 'top') {
-      positionClass = 'bottom-1 left-1/2 -translate-x-1/2 flex-row';
+      positionClass = 'bottom-3 left-1/2 -translate-x-1/2 flex-row';
     } else if (edge === 'left') {
-      positionClass = 'right-1 top-1/2 -translate-y-1/2 flex-col';
+      positionClass = 'right-3 top-1/2 -translate-y-1/2 flex-col';
     } else if (edge === 'right') {
-      positionClass = 'left-1 top-1/2 -translate-y-1/2 flex-col';
+      positionClass = 'left-3 top-1/2 -translate-y-1/2 flex-col';
     } else {
       return null;
     }
@@ -280,7 +294,7 @@ export function Cell({ tile, tileState, playersOnTile, activePlayerId, onBuildHo
       )}
 
       {/* Main Content Area */}
-      <div className="flex-grow flex flex-col justify-between w-full h-full relative">
+      <div className={`flex-grow flex flex-col justify-between w-full h-full relative ${contentPaddingClass}`}>
         {/* A. Tên ô cờ */}
         <div className={`text-[11px] md:text-[12.5px] font-extrabold text-center leading-tight ${isCorner ? 'text-[12.5px] md:text-[14px] font-black' : t.cellText} stand-up-detail`}>
           {tile.name}

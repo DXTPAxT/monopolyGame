@@ -41,6 +41,13 @@ export function endTurn(state: GameState): EndTurnResult {
     state.diceRolled = false;
     state.hasMoved = false;
     state.rolledDoubles = false;
+    // Đóng modal đang mở (trả thuê/thuế/thẻ) trước khi tung lại — nếu không
+    // modal sẽ kẹt trên màn hình và lần bấm Xác Nhận sau bị chặn vì diceRolled=false.
+    state.currentActionRequired = 'none';
+    state.pendingPayment = null;
+    state.activeCard = null;
+    state.activeModal = null;
+    state.modalPayload = null;
     applyTurnDeadline(state);
     return {
       events: [`${player.name} đổ đôi nên được đi thêm một lượt!`],
