@@ -233,54 +233,41 @@ export function Board({
       const headerGradient = groupColors[tile.group] || 'from-slate-700 to-slate-800';
 
       return (
-        <div className="w-full max-w-[340px] bg-slate-950 border-2 border-slate-800 rounded-2xl overflow-hidden shadow-2xl text-left font-sans mx-auto shrink-0 select-none animate-fadeIn">
-          <div className={`bg-gradient-to-r ${headerGradient} py-4 px-5 text-center text-white border-b-2 border-slate-950`}>
-            <span className="text-[12px] uppercase font-black tracking-widest text-white/80 flex items-center justify-center gap-1.5">
-              <FileText size={14} /> Bằng Khoán Đất
+        <div className="w-full max-w-[250px] bg-slate-950 border border-slate-850 rounded-xl overflow-hidden shadow-xl text-left font-sans mx-auto shrink-0 select-none animate-fadeIn">
+          <div className={`bg-gradient-to-r ${headerGradient} py-2 px-3 text-center text-white border-b border-slate-950`}>
+            <span className="text-[10px] uppercase font-bold tracking-wider text-white/70 flex items-center justify-center gap-1">
+              <FileText size={11} /> Bằng Khoán Đất
             </span>
-            <h4 className="text-lg font-black uppercase tracking-wide text-white mt-1.5">{tile.name}</h4>
+            <h4 className="text-sm font-black uppercase tracking-wide text-white mt-0.5">{tile.name}</h4>
           </div>
-          <div className="p-5 space-y-3 text-sm text-slate-350">
+          <div className="p-3 space-y-2 text-xs text-slate-350 leading-tight">
             {tile.price && (
-              <div className="flex justify-between border-b border-slate-900 pb-2 font-bold text-slate-200">
+              <div className="flex justify-between border-b border-slate-900 pb-1 font-bold text-slate-200">
                 <span>Giá mua:</span>
                 <span className="text-emerald-400 font-mono">${tile.price}</span>
               </div>
             )}
             {tile.rent && (
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-slate-250 font-semibold mb-1">
-                  <span>Tiền thuê đất:</span>
+              <div className="space-y-1">
+                <div className="flex justify-between text-slate-200 font-semibold mb-0.5">
+                  <span>Thuê gốc:</span>
                   <span className="font-mono text-slate-100">${tile.rent[0]}</span>
                 </div>
                 {tile.type === 'property' && (
-                  <div className="space-y-1.5 text-xs text-slate-400 mt-1 pl-2">
-                    <div className="flex justify-between">
-                      <span>• Với 1 Nhà:</span>
-                      <span className="font-mono">${tile.rent[1]}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>• Với 2 Nhà:</span>
-                      <span className="font-mono">${tile.rent[2]}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>• Với 3 Nhà:</span>
-                      <span className="font-mono">${tile.rent[3]}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>• Với 4 Nhà:</span>
-                      <span className="font-mono">${tile.rent[4]}</span>
-                    </div>
-                    <div className="flex justify-between font-bold text-red-400">
-                      <span>• Khách sạn:</span>
-                      <span className="font-mono">${tile.rent[5]}</span>
+                  <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[10.5px] text-slate-400 pl-1">
+                    <div>• 1 Nhà: <span className="font-mono text-slate-350">${tile.rent[1]}</span></div>
+                    <div>• 2 Nhà: <span className="font-mono text-slate-350">${tile.rent[2]}</span></div>
+                    <div>• 3 Nhà: <span className="font-mono text-slate-350">${tile.rent[3]}</span></div>
+                    <div>• 4 Nhà: <span className="font-mono text-slate-350">${tile.rent[4]}</span></div>
+                    <div className="col-span-2 font-bold text-red-400">
+                      • Khách sạn: <span className="font-mono">${tile.rent[5]}</span>
                     </div>
                   </div>
                 )}
               </div>
             )}
             {tile.housePrice && (
-              <div className="flex justify-between border-t border-slate-900 pt-2.5 text-[12px] text-slate-500 font-bold">
+              <div className="flex justify-between border-t border-slate-900 pt-1.5 text-[10.5px] text-slate-500 font-bold">
                 <span>Giá xây nhà:</span>
                 <span className="font-mono">${tile.housePrice}/căn</span>
               </div>
@@ -657,7 +644,7 @@ export function Board({
       {/* Modal overlay */}
       {gameState.activeModal && isAnimationDone && (
         <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm z-40 rounded-2xl flex flex-col items-center justify-center p-3 pointer-events-auto">
-          <div className="w-full max-w-[340px]">
+          <div className="w-full max-w-[270px]">
             {renderCenterStageModal()}
           </div>
         </div>

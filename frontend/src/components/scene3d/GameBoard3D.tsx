@@ -498,7 +498,7 @@ export function GameBoard3D({
           transform
           position={[0, 0.08, 0]}
           rotation={[-Math.PI / 2, 0, 0]}
-          scale={0.8}
+          scale={0.56}
           pointerEvents="auto"
           style={{ pointerEvents: 'auto' }}
         >
