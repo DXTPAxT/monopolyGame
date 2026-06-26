@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react';
-import { Cell } from './Cell';
 import { CenterStageControls } from './CenterStageControls';
 import { BuildModal } from './modals/BuildModal';
+import { GameBoard3D } from './scene3d/GameBoard3D';
 
 const Dice3D = lazy(() => import('./scene3d/Dice3D').then((m) => ({ default: m.Dice3D })));
 import type { GameState, Player, TileMetadata } from '../types/game';
@@ -566,74 +566,56 @@ export function Board({
         <div className="absolute inset-0 bg-slate-950/65 backdrop-blur-[0.5px] z-20 pointer-events-none rounded-2xl transition-all duration-300 animate-fadeIn" />
       )}
 
-      {/* Bàn cờ 2D hình chữ nhật (w-full h-full) */}
-      <div
-        className={`w-full h-full grid relative rounded-2xl border ${boardTheme.frame} select-none transition-colors duration-500`}
-        style={{
-          gridTemplateColumns: '2fr repeat(9, 1fr) 2fr',
-          gridTemplateRows: '2fr repeat(9, 1fr) 2fr',
-        }}
-      >
-        {/* Render 40 ô cờ */}
-        {boardData.map((tile) => {
-          const tileState = tiles.find((t) => t.id === tile.id) || {
-            id: tile.id,
-            ownerId: null,
-            houses: 0,
-            hotel: false,
-            mortgaged: false,
-            ownerVisits: 0,
-          };
-          const owner = players.find((p) => p.id === tileState.ownerId);
-          const ownerColor = owner?.color;
-          
-          // Tính tiền thuê hiện tại để truyền vào Cell
-          let currentRent: number | string | undefined = undefined;
-          if (tileState.ownerId) {
+      {/* 3D Game Board Canvas wrapper */}
+      <div className="w-full h-full absolute inset-0 z-10 rounded-2xl overflow-hidden">
+        <GameBoard3D
+          gameState={gameState}
+          playerId={playerId}
+          activePlayer={activePlayer}
+          buildHouse={buildHouse}
+          visualPositions={visualPositions}
+          boardData={boardData}
+          isHighlighted={(id) => highlightedTileId === id}
+          isGroupMonopoly={(group, ownerId) => isGroupMonopoly(group, ownerId)}
+          getPlayersOnTile={getPlayersOnTile}
+          getOwnerColor={(ownerId) => {
+            const owner = players.find((p) => p.id === ownerId);
+            return owner?.color;
+          }}
+          getCurrentRent={(tile) => {
+            const tileState = tiles.find((t) => t.id === tile.id);
+            if (!tileState || !tileState.ownerId) return undefined;
             if (tile.type === 'property' && tile.rent) {
               if (tileState.hotel) {
-                currentRent = tile.rent[5];
+                return tile.rent[5];
               } else if (tileState.houses > 0) {
-                currentRent = tile.rent[tileState.houses];
+                return tile.rent[tileState.houses];
               } else {
                 const isMonopoly = isGroupMonopoly(tile.group, tileState.ownerId);
-                currentRent = isMonopoly ? tile.rent[0] * 2 : tile.rent[0];
+                return isMonopoly ? tile.rent[0] * 2 : tile.rent[0];
               }
             } else if (tile.type === 'railroad') {
               const railroadsOwned = tiles.filter(
                 (t) => t.ownerId === tileState.ownerId && boardData.find(b => b.id === t.id)?.type === 'railroad'
               ).length;
               const rentTable = [25, 50, 100, 200];
-              currentRent = rentTable[railroadsOwned - 1] || 25;
+              return rentTable[railroadsOwned - 1] || 25;
             } else if (tile.type === 'utility') {
               const utilitiesOwned = tiles.filter(
                 (t) => t.ownerId === tileState.ownerId && boardData.find(b => b.id === t.id)?.type === 'utility'
               ).length;
-              currentRent = utilitiesOwned >= 2 ? '10x' : '4x';
+              return utilitiesOwned >= 2 ? '10x' : '4x';
             }
-          }
-          
-          return (
-            <Cell
-              key={tile.id}
-              tile={tile}
-              tileState={tileState}
-              playersOnTile={getPlayersOnTile(tile.id)}
-              activePlayerId={activePlayer?.id}
-              onBuildHouse={buildHouse}
-              ownerColor={ownerColor}
-              isHighlighted={highlightedTileId === tile.id}
-              isMonopoly={isGroupMonopoly(tile.group, tileState.ownerId)}
-              currentRent={currentRent}
-              theme={boardTheme}
-            />
-          );
-        })}
+            return undefined;
+          }}
+        />
+      </div>
 
-        {/* Khu vực trung tâm bàn cờ - SÂN KHẤU CHÍNH (z-30 relative) */}
-        <div className={`col-start-2 col-end-11 row-start-2 row-end-11 border ${boardTheme.center} rounded-2xl shadow-[inset_0_0_30px_rgba(0,0,0,0.85)] backdrop-blur-[0.5px] flex flex-col justify-between items-center p-3.5 relative select-none z-30 overflow-hidden transition-colors duration-500`}>
+      {/* HTML Overlay: Center Stage Controls & HUD */}
+      <div className="absolute inset-0 pointer-events-none z-30 flex items-center justify-center">
+        <div className={`w-[260px] md:w-[280px] h-[340px] md:h-[370px] border ${boardTheme.center} bg-slate-950/80 backdrop-blur-md rounded-2xl shadow-2xl flex flex-col justify-between items-center p-3.5 pointer-events-auto`}>
           
-          {/* Vòng tròn neon           {/* DYNAMIC CONTENT: LOGO, BANNER & CONTROLS */}
+          {/* DYNAMIC CONTENT: LOGO, BANNER & CONTROLS */}
           <div className="text-center flex flex-col justify-between items-center h-full w-full relative z-10 px-2 select-none gap-2">
             
             {/* TOP SECTION: LOGO & ROOM & TURN BANNER */}

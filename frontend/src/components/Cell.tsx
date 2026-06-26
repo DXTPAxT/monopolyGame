@@ -17,6 +17,8 @@ interface CellProps {
   onSelectFreeUpgrade?: (tileId: number) => void;
   currentRent?: number | string;
   theme?: BoardTheme;
+  hidePawns?: boolean;
+  disableGridPosition?: boolean;
 }
 
 // Khối nhà nhỏ 3D (CSS) — màu xanh, có mặt nóc sáng để tạo cảm giác nổi
@@ -64,8 +66,8 @@ function getGridPosition(id: number): CSSProperties {
   }
 }
 
-export function Cell({ tile, tileState, playersOnTile, activePlayerId, onBuildHouse, ownerColor, isHighlighted, isMonopoly, currentRent, theme }: CellProps) {
-  const gridStyle = getGridPosition(tile.id);
+export function Cell({ tile, tileState, playersOnTile, activePlayerId, onBuildHouse, ownerColor, isHighlighted, isMonopoly, currentRent, theme, hidePawns, disableGridPosition }: CellProps) {
+  const gridStyle = disableGridPosition ? {} : getGridPosition(tile.id);
   const isCorner = tile.id % 10 === 0;
   const t = theme ?? getBoardTheme();
 
@@ -355,7 +357,7 @@ export function Cell({ tile, tileState, playersOnTile, activePlayerId, onBuildHo
       {ownerColor && !isCorner && renderOwnerFlag()}
 
       {/* Danh sách người chơi trên ô */}
-      {playersOnTile.length > 0 && renderPawns()}
+      {playersOnTile.length > 0 && !hidePawns && renderPawns()}
 
     </div>
   );
