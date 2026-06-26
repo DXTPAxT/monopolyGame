@@ -126,7 +126,7 @@ export function GameBoard3D({
     <div className="w-full h-full relative select-none">
       <Canvas
         shadows
-        camera={{ position: [0, 7.5, 7.5], fov: 62 }}
+        camera={{ position: [0, 6.0, 9.8], fov: 60 }}
         gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
         style={{ width: '100%', height: '100%', outline: 'none' }}
       >

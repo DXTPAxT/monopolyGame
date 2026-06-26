@@ -271,7 +271,7 @@ export function Cell({ tile, tileState, playersOnTile, activePlayerId, onBuildHo
     cellBgClass = 'bg-slate-900/60 border-slate-800/80';
   }
 
-  const cellClass = `relative ${cellBgClass} border flex overflow-hidden select-none group/cell transition-all duration-300 ${
+  const cellClass = `relative w-full h-full ${cellBgClass} border flex overflow-hidden select-none group/cell transition-all duration-300 ${
     isCorner ? 'p-1.5 justify-center items-center ' + getCornerLayout() : 'p-0.5'
   } ${
     isHorizontalCell ? 'flex-row' : 'flex-col'
