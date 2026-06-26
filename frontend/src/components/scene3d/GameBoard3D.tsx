@@ -172,8 +172,8 @@ function makeTileTexture(
   // ─── Owner indicator (thick bright border) ───
   if (ownerColor) {
     ctx.strokeStyle = ownerColor;
-    ctx.lineWidth = 8;
-    ctx.strokeRect(4, 4, PX_W - 8, PX_H - 8);
+    ctx.lineWidth = 20;
+    ctx.strokeRect(10, 10, PX_W - 20, PX_H - 20);
   }
 
   // ─── Tile Name (DOUBLE font sizes for readability) ───
@@ -491,6 +491,7 @@ function AnimatedToken({
   return (
     <group ref={ref} scale={[1.8, 1.8, 1.8]}>
       <Token3D skinId={skinId} color={color} />
+      <pointLight color={color} intensity={2.2} distance={1.2} decay={1.5} position={[0, 0.25, 0]} />
     </group>
   );
 }
@@ -505,14 +506,14 @@ function House3D({ position, ownerColor }: { position: [number, number, number];
 
   return (
     <group position={position}>
-      {/* House Body (Player color) */}
-      <mesh position={[0, 0.05, 0]} castShadow receiveShadow>
-        <boxGeometry args={[0.11, 0.1, 0.11]} />
+      {/* House Body (Player color) - Upscaled by 45% */}
+      <mesh position={[0, 0.07, 0]} castShadow receiveShadow>
+        <boxGeometry args={[0.16, 0.14, 0.16]} />
         <meshStandardMaterial color={ownerColor || '#10b981'} roughness={0.3} metalness={0.1} />
       </mesh>
-      {/* House Roof (Darker player color) */}
-      <mesh position={[0, 0.12, 0]} rotation={[0, Math.PI / 4, 0]} castShadow>
-        <coneGeometry args={[0.09, 0.07, 4]} />
+      {/* House Roof (Darker player color) - Upscaled */}
+      <mesh position={[0, 0.17, 0]} rotation={[0, Math.PI / 4, 0]} castShadow>
+        <coneGeometry args={[0.13, 0.1, 4]} />
         <meshStandardMaterial color={roofColor} roughness={0.4} />
       </mesh>
     </group>
@@ -529,14 +530,14 @@ function Hotel3D({ position, ownerColor }: { position: [number, number, number];
 
   return (
     <group position={position}>
-      {/* Hotel Body (Player color) */}
-      <mesh position={[0, 0.07, 0]} castShadow receiveShadow>
-        <boxGeometry args={[0.22, 0.14, 0.18]} />
+      {/* Hotel Body (Player color) - Upscaled by 36% */}
+      <mesh position={[0, 0.095, 0]} castShadow receiveShadow>
+        <boxGeometry args={[0.3, 0.19, 0.24]} />
         <meshStandardMaterial color={ownerColor || '#ef4444'} roughness={0.3} metalness={0.1} />
       </mesh>
-      {/* Hotel Roof (pyramid) */}
-      <mesh position={[0, 0.17, 0]} rotation={[0, Math.PI / 4, 0]} castShadow>
-        <coneGeometry args={[0.17, 0.08, 4]} />
+      {/* Hotel Roof (pyramid) - Upscaled */}
+      <mesh position={[0, 0.23, 0]} rotation={[0, Math.PI / 4, 0]} castShadow>
+        <coneGeometry args={[0.23, 0.11, 4]} />
         <meshStandardMaterial color={roofColor} roughness={0.4} />
       </mesh>
     </group>
@@ -634,6 +635,29 @@ function Tile3D({
       {/* Houses & Hotels */}
       {isProperty && (
         <TileHouses tileId={tile.id} houses={houses} hotel={hotel} ownerColor={ownerColor} />
+      )}
+      {/* 3D Neon Bezel Outline for ownership */}
+      {ownerColor && (
+        <group>
+          {/* Top/Bottom edges */}
+          <mesh position={[0, 0.065, l / 2 - 0.0175]} castShadow receiveShadow>
+            <boxGeometry args={[w, 0.015, 0.035]} />
+            <meshStandardMaterial color={ownerColor} emissive={ownerColor} emissiveIntensity={1.0} roughness={0.2} metalness={0.8} />
+          </mesh>
+          <mesh position={[0, 0.065, -l / 2 + 0.0175]} castShadow receiveShadow>
+            <boxGeometry args={[w, 0.015, 0.035]} />
+            <meshStandardMaterial color={ownerColor} emissive={ownerColor} emissiveIntensity={1.0} roughness={0.2} metalness={0.8} />
+          </mesh>
+          {/* Left/Right edges */}
+          <mesh position={[-w / 2 + 0.0175, 0.065, 0]} castShadow receiveShadow>
+            <boxGeometry args={[0.035, 0.015, l - 0.07]} />
+            <meshStandardMaterial color={ownerColor} emissive={ownerColor} emissiveIntensity={1.0} roughness={0.2} metalness={0.8} />
+          </mesh>
+          <mesh position={[w / 2 - 0.0175, 0.065, 0]} castShadow receiveShadow>
+            <boxGeometry args={[0.035, 0.015, l - 0.07]} />
+            <meshStandardMaterial color={ownerColor} emissive={ownerColor} emissiveIntensity={1.0} roughness={0.2} metalness={0.8} />
+          </mesh>
+        </group>
       )}
       {/* Highlight glow ring */}
       {isHighlighted && (
