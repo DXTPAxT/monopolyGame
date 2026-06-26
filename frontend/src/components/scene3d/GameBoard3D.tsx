@@ -95,7 +95,7 @@ const get3DCoordinate = (id: number): [number, number, number] => {
   else {
     let z = -4.8;
     if (id > 30 && id < 40) {
-      z = -3.6 + (id - 30) * 0.9;
+      z = -3.6 + (id - 31) * 0.9;
     }
     return [4.8, 0, z];
   }
