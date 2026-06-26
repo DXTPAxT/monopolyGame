@@ -7,7 +7,6 @@ const Dice3D = lazy(() => import('./scene3d/Dice3D').then((m) => ({ default: m.D
 import type { GameState, Player, TileMetadata } from '../types/game';
 import boardDataRaw from '../data/board.json';
 import { playClickSound } from '../utils/sound';
-import { getBoardTheme } from '../data/boardThemes';
 import { Coins, Lock, Skull, ShieldAlert, HelpCircle, Gift, ArrowRight, FileText } from 'lucide-react';
 
 const boardData = boardDataRaw as TileMetadata[];
@@ -44,7 +43,6 @@ export function Board({
   finishBuild,
 }: BoardProps) {
   const { tiles, players, activePlayerIndex, dice, diceRolled, currentActionRequired, pendingPayment, winnerId } = gameState;
-  const boardTheme = getBoardTheme(gameState.settings?.boardSkin);
 
   // State vị trí hiển thị của quân cờ (visual position) để chạy animation di chuyển
   const [visualPositions, setVisualPositions] = useState<Record<string, number>>({});
@@ -558,155 +556,136 @@ export function Board({
     }
   };
 
-  return (
-    <div ref={containerRef} className="w-full h-full p-1 overflow-hidden relative select-none">
-
-      {/* Dim Overlay when rolling / revealing dice (Spotlight on center) */}
-      {(localDiceRolling || diceRevealActive) && (
-        <div className="absolute inset-0 bg-slate-950/65 backdrop-blur-[0.5px] z-20 pointer-events-none rounded-2xl transition-all duration-300 animate-fadeIn" />
-      )}
-
-      {/* 3D Game Board Canvas wrapper */}
-      <div className="w-full h-full absolute inset-0 z-10 rounded-2xl overflow-hidden">
-        <GameBoard3D
-          gameState={gameState}
-          playerId={playerId}
-          activePlayer={activePlayer}
-          buildHouse={buildHouse}
-          visualPositions={visualPositions}
-          boardData={boardData}
-          isHighlighted={(id) => highlightedTileId === id}
-          isGroupMonopoly={(group, ownerId) => isGroupMonopoly(group, ownerId)}
-          getPlayersOnTile={getPlayersOnTile}
-          getOwnerColor={(ownerId) => {
-            const owner = players.find((p) => p.id === ownerId);
-            return owner?.color;
-          }}
-          getCurrentRent={(tile) => {
-            const tileState = tiles.find((t) => t.id === tile.id);
-            if (!tileState || !tileState.ownerId) return undefined;
-            if (tile.type === 'property' && tile.rent) {
-              if (tileState.hotel) {
-                return tile.rent[5];
-              } else if (tileState.houses > 0) {
-                return tile.rent[tileState.houses];
-              } else {
-                const isMonopoly = isGroupMonopoly(tile.group, tileState.ownerId);
-                return isMonopoly ? tile.rent[0] * 2 : tile.rent[0];
-              }
-            } else if (tile.type === 'railroad') {
-              const railroadsOwned = tiles.filter(
-                (t) => t.ownerId === tileState.ownerId && boardData.find(b => b.id === t.id)?.type === 'railroad'
-              ).length;
-              const rentTable = [25, 50, 100, 200];
-              return rentTable[railroadsOwned - 1] || 25;
-            } else if (tile.type === 'utility') {
-              const utilitiesOwned = tiles.filter(
-                (t) => t.ownerId === tileState.ownerId && boardData.find(b => b.id === t.id)?.type === 'utility'
-              ).length;
-              return utilitiesOwned >= 2 ? '10x' : '4x';
-            }
-            return undefined;
-          }}
-        />
+  // HUD content rendered inside 3D scene
+  const hudContent = (
+    <div className={`bg-slate-950/85 backdrop-blur-md border border-slate-800/60 rounded-2xl shadow-2xl p-3.5 flex flex-col items-center gap-2`}>
+      {/* TOP: Logo & Room & Turn */}
+      <div className="flex flex-col items-center gap-1.5 w-full">
+        <div className="flex items-center justify-center gap-2">
+          <h2 className="text-sm font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-br from-indigo-400 to-cyan-400 uppercase">
+            Cờ Tỷ Phú
+          </h2>
+          <span className="text-[7.5px] text-slate-500 font-bold uppercase tracking-wider bg-slate-900/60 px-1.5 py-0.5 rounded-md border border-slate-800">
+            Phòng: {gameState.roomCode}
+          </span>
+        </div>
+        {activePlayer && !winnerId && (
+          <div className="px-4 py-1.5 bg-slate-900/90 border border-slate-800 rounded-full shadow flex items-center gap-1.5 text-[8.5px] font-black tracking-wider uppercase">
+            <span className="w-1.5 h-1.5 rounded-full animate-ping shrink-0" style={{ backgroundColor: activePlayer.color }} />
+            <span className="text-slate-400">LƯỢT:</span>
+            <span style={{ color: activePlayer.color }}>{activePlayer.name}</span>
+          </div>
+        )}
       </div>
 
-      {/* HTML Overlay: Center Stage Controls & HUD */}
-      <div className="absolute inset-0 pointer-events-none z-30 flex items-center justify-center">
-        <div className={`w-[260px] md:w-[280px] h-[340px] md:h-[370px] border ${boardTheme.center} bg-slate-950/80 backdrop-blur-md rounded-2xl shadow-2xl flex flex-col justify-between items-center p-3.5 pointer-events-auto`}>
-          
-          {/* DYNAMIC CONTENT: LOGO, BANNER & CONTROLS */}
-          <div className="text-center flex flex-col justify-between items-center h-full w-full relative z-10 px-2 select-none gap-2">
-            
-            {/* TOP SECTION: LOGO & ROOM & TURN BANNER */}
-            <div className="flex flex-col items-center gap-1.5 w-full shrink-0">
-              <div className="flex items-center justify-center gap-2">
-                <h2 className="text-sm md:text-base font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-br from-indigo-400 to-cyan-400 uppercase mt-0.5 shadow-sm animate-pulse">
-                  Cờ Tỷ Phú
-                </h2>
-                <span className="text-[7.5px] text-slate-500 font-bold uppercase tracking-wider bg-slate-900/60 px-1.5 py-0.5 rounded-md border border-slate-800">
-                  Phòng: {gameState.roomCode}
-                </span>
-              </div>
-
-              {/* Turn Banner (Integrated inside Center Stage) */}
-              {activePlayer && !winnerId && (
-                <div className="px-4 py-1.5 bg-slate-900/90 border border-slate-800 rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.5)] flex items-center gap-1.5 text-[8.5px] font-black tracking-wider uppercase animate-fadeIn">
-                  <span className="w-1.5 h-1.5 rounded-full animate-ping shrink-0" style={{ backgroundColor: activePlayer.color }} />
-                  <span className="text-slate-400">LƯỢT:</span>
-                  <span style={{ color: activePlayer.color }}>{activePlayer.name}</span>
-                </div>
-              )}
-            </div>
-
-            {/* MIDDLE SECTION: DICE HERO 3D */}
-            <div className="flex-grow flex flex-col items-center justify-center w-full py-1.5 min-h-[140px]">
-              <div className="w-56 h-36 relative">
-                <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-[11px] text-slate-500">🎲 …</div>}>
-                  <Dice3D dice={dice} rolling={localDiceRolling} skin={gameState.settings?.diceSkin} />
-                </Suspense>
-              </div>
-              {diceRevealActive ? (
-                <div className="text-sm font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-indigo-400 font-mono mt-1 animate-pulse">
-                  {dice[0]} + {dice[1]} = {dice[0] + dice[1]}
-                </div>
-              ) : !diceRolled && isMyTurn ? (
-                <span className="text-[11px] text-indigo-300 font-bold uppercase tracking-wider mt-1 animate-pulse">Lượt của bạn — Đổ xúc xắc!</span>
-              ) : (
-                <span className="text-[11px] text-slate-500 font-mono mt-1">Xúc xắc: {dice[0]} + {dice[1]}</span>
-              )}
-            </div>
-
-            {/* BOTTOM SECTION: CONTROLS & LOGS FEED */}
-            <div className="w-full flex flex-col items-center gap-1.5 mt-auto shrink-0">
-              {/* Play Turn Action Controls */}
-              {isAnimationDone && !gameState.activeModal && (
-                <div className="w-full max-w-[220px] flex justify-center animate-slide-up-flex">
-                  <CenterStageControls
-                    isMyTurn={isMyTurn}
-                    currentActionRequired={currentActionRequired}
-                    diceRolled={diceRolled}
-                    pendingPayment={pendingPayment}
-                    winnerId={winnerId}
-                    isHost={playerId === hostId}
-                    inJail={!!activePlayer?.inJail}
-                    hasJailCard={(activePlayer?.getOutOfJailCards || 0) > 0}
-                    rollDice={rollDice}
-                    buyProperty={buyProperty}
-                    endTurn={endTurn}
-                    declareBankruptcy={declareBankruptcy}
-                    restartGame={restartGame}
-                    jailAction={jailAction}
-                    settleFunds={settleFunds}
-                  />
-                </div>
-              )}
-
-              {/* Action Feed (2 dòng log mới nhất) */}
-              <div className="w-full flex flex-col gap-1 max-w-[220px] select-none mt-1">
-                {gameState.logs.slice(-2).map((log, idx) => (
-                  <div key={idx} className="bg-slate-950/70 border border-slate-900/60 px-2 py-0.5 rounded-lg text-[7.5px] font-medium text-slate-400 truncate text-center leading-normal shadow-sm">
-                    &gt; {log}
-                  </div>
-                ))}
-                {gameState.logs.length === 0 && (
-                  <div className="text-center text-[7.5px] text-slate-650 font-bold uppercase py-0.5">Trận đấu bắt đầu</div>
-                )}
-              </div>
-            </div>
-
+      {/* MIDDLE: Dice */}
+      <div className="flex flex-col items-center justify-center w-full py-1 min-h-[100px]">
+        <div className="w-48 h-28 relative">
+          <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-[11px] text-slate-500">🎲 …</div>}>
+            <Dice3D dice={dice} rolling={localDiceRolling} skin={gameState.settings?.diceSkin} />
+          </Suspense>
+        </div>
+        {diceRevealActive ? (
+          <div className="text-sm font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-indigo-400 font-mono mt-1 animate-pulse">
+            {dice[0]} + {dice[1]} = {dice[0] + dice[1]}
           </div>
+        ) : !diceRolled && isMyTurn ? (
+          <span className="text-[11px] text-indigo-300 font-bold uppercase tracking-wider mt-1 animate-pulse">Lượt của bạn — Đổ xúc xắc!</span>
+        ) : (
+          <span className="text-[11px] text-slate-500 font-mono mt-1">Xúc xắc: {dice[0]} + {dice[1]}</span>
+        )}
+      </div>
 
-          {/* ACTIVE GAME MODAL: chỉ hiện sau khi tất cả hoạt ảnh xong */}
-          {gameState.activeModal && isAnimationDone && (
-            <div className="absolute inset-0 bg-slate-950/75 backdrop-blur-[1px] z-40 rounded-2xl flex flex-col items-center justify-center p-4 pointer-events-auto">
-              <div className="w-full max-w-[520px] animate-slide-up-flex">
-                {renderCenterStageModal()}
-              </div>
+      {/* BOTTOM: Controls & Logs */}
+      <div className="w-full flex flex-col items-center gap-1.5">
+        {isAnimationDone && !gameState.activeModal && (
+          <div className="w-full max-w-[220px] flex justify-center">
+            <CenterStageControls
+              isMyTurn={isMyTurn}
+              currentActionRequired={currentActionRequired}
+              diceRolled={diceRolled}
+              pendingPayment={pendingPayment}
+              winnerId={winnerId}
+              isHost={playerId === hostId}
+              inJail={!!activePlayer?.inJail}
+              hasJailCard={(activePlayer?.getOutOfJailCards || 0) > 0}
+              rollDice={rollDice}
+              buyProperty={buyProperty}
+              endTurn={endTurn}
+              declareBankruptcy={declareBankruptcy}
+              restartGame={restartGame}
+              jailAction={jailAction}
+              settleFunds={settleFunds}
+            />
+          </div>
+        )}
+        <div className="w-full flex flex-col gap-1 max-w-[220px] select-none mt-1">
+          {gameState.logs.slice(-2).map((log, idx) => (
+            <div key={idx} className="bg-slate-950/70 border border-slate-900/60 px-2 py-0.5 rounded-lg text-[7.5px] font-medium text-slate-400 truncate text-center leading-normal shadow-sm">
+              &gt; {log}
             </div>
+          ))}
+          {gameState.logs.length === 0 && (
+            <div className="text-center text-[7.5px] text-slate-650 font-bold uppercase py-0.5">Trận đấu bắt đầu</div>
           )}
         </div>
       </div>
+
+      {/* Modal overlay */}
+      {gameState.activeModal && isAnimationDone && (
+        <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm z-40 rounded-2xl flex flex-col items-center justify-center p-3 pointer-events-auto">
+          <div className="w-full max-w-[260px]">
+            {renderCenterStageModal()}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div ref={containerRef} className="w-full h-full overflow-hidden relative select-none">
+      <GameBoard3D
+        gameState={gameState}
+        playerId={playerId}
+        activePlayer={activePlayer}
+        buildHouse={buildHouse}
+        visualPositions={visualPositions}
+        boardData={boardData}
+        isHighlighted={(id) => highlightedTileId === id}
+        isGroupMonopoly={(group, ownerId) => isGroupMonopoly(group, ownerId)}
+        getPlayersOnTile={getPlayersOnTile}
+        getOwnerColor={(ownerId) => {
+          const owner = players.find((p) => p.id === ownerId);
+          return owner?.color;
+        }}
+        getCurrentRent={(tile) => {
+          const tileState = tiles.find((t) => t.id === tile.id);
+          if (!tileState || !tileState.ownerId) return undefined;
+          if (tile.type === 'property' && tile.rent) {
+            if (tileState.hotel) return tile.rent[5];
+            else if (tileState.houses > 0) return tile.rent[tileState.houses];
+            else {
+              const isMono = isGroupMonopoly(tile.group, tileState.ownerId);
+              return isMono ? tile.rent[0] * 2 : tile.rent[0];
+            }
+          } else if (tile.type === 'railroad') {
+            const count = tiles.filter(t => t.ownerId === tileState.ownerId && boardData.find(b => b.id === t.id)?.type === 'railroad').length;
+            return [25, 50, 100, 200][count - 1] || 25;
+          } else if (tile.type === 'utility') {
+            const count = tiles.filter(t => t.ownerId === tileState.ownerId && boardData.find(b => b.id === t.id)?.type === 'utility').length;
+            return count >= 2 ? '10x' : '4x';
+          }
+          return undefined;
+        }}
+        dice={dice}
+        diceRolled={diceRolled}
+        isMyTurn={isMyTurn}
+        localDiceRolling={localDiceRolling}
+        diceRevealActive={diceRevealActive}
+        isAnimationDone={isAnimationDone}
+        winnerId={winnerId}
+        hudContent={hudContent}
+      />
     </div>
   );
 }
