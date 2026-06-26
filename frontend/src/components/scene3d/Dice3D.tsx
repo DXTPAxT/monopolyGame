@@ -1,19 +1,12 @@
 /**
  * Dice3D.tsx — Real 3D dice using react-three-fiber
- * Self-contained; expects a sized parent container.
+ * Exports both the standalone component (with Canvas) AND the raw Die mesh.
  */
 import { useRef, useMemo, useEffect } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 // ─── Pip layout per face (standard die: opposite faces sum to 7) ────────────
-// Face order for THREE.js BoxGeometry materials:
-//   0 = +X (right), 1 = -X (left), 2 = +Y (top), 3 = -Y (bottom),
-//   4 = +Z (front), 5 = -Z (back)
-// Standard die: 1=front, 2=top, 3=right, 4=left, 5=bottom, 6=back
-// BUT we only care that when we rotate to show value V on +Y (top), it looks right.
-
-// Pip positions for each face value (normalised 0-1 grid)
 const PIP_POSITIONS: Record<number, [number, number][]> = {
   1: [[0.5, 0.5]],
   2: [[0.25, 0.25], [0.75, 0.75]],
@@ -29,7 +22,7 @@ const PIP_POSITIONS: Record<number, [number, number][]> = {
 
 type SkinName = 'neon' | 'jade' | 'wood';
 
-interface SkinColors {
+export interface SkinColors {
   face: string;
   pip: string;
   emissive: string;
@@ -38,15 +31,16 @@ interface SkinColors {
   metalness: number;
 }
 
-const SKINS: Record<SkinName, SkinColors> = {
-  // Neon: xúc xắc đen ánh kim, chấm cyan sáng. emissive PHẢI thấp vì nó phủ đều
-  // lên cả mặt — để cao thì nền đen bị nhuộm cyan, gần màu chấm → khó nhìn.
+export const SKINS: Record<SkinName, SkinColors> = {
   neon:  { face: '#0a0f1e', pip: '#a5f3ff', emissive: '#00e5ff', emissiveIntensity: 0.06, roughness: 0.2, metalness: 0.6 },
-  // Ngọc: xanh ngọc bích đậm, chấm trắng mint, bề mặt đánh bóng
   jade:  { face: '#0e8a5f', pip: '#eafff4', emissive: '#19c47f', emissiveIntensity: 0.12, roughness: 0.25, metalness: 0.35 },
-  // Gỗ: nâu gỗ ấm, chấm kem, bề mặt mộc mờ (không bóng, không kim loại)
   wood:  { face: '#7a4a22', pip: '#f5e6cf', emissive: '#3a1f0a', emissiveIntensity: 0.04, roughness: 0.9, metalness: 0.0 },
 };
+
+export function getSkinColors(skin?: string): SkinColors {
+  const key: SkinName = skin === 'jade' ? 'jade' : skin === 'wood' ? 'wood' : 'neon';
+  return SKINS[key];
+}
 
 // Build a CanvasTexture for a single face showing `value` pips
 function makeFaceTexture(value: number, colors: SkinColors): THREE.CanvasTexture {
@@ -85,15 +79,6 @@ function makeFaceTexture(value: number, colors: SkinColors): THREE.CanvasTexture
 }
 
 // Rotations that place each value (1–6) on the +Y (top) face.
-// BoxGeometry face order: +X=1, -X=6, +Y=2, -Y=5, +Z=3, -Z=4
-// We need to rotate so the correct face points up (+Y).
-// Starting from identity where +Y face = value 2:
-//   value 2 → identity
-//   value 5 → flip 180° around Z
-//   value 3 → rotate -90° around X (front face comes up)
-//   value 4 → rotate +90° around X (back face comes up)
-//   value 1 → rotate +90° around Z (right face comes up)
-//   value 6 → rotate -90° around Z (left face comes up)
 const VALUE_TO_EULER: Record<number, THREE.Euler> = {
   1: new THREE.Euler(0, 0,  Math.PI / 2),
   2: new THREE.Euler(0, 0, 0),
@@ -103,26 +88,24 @@ const VALUE_TO_EULER: Record<number, THREE.Euler> = {
   6: new THREE.Euler(0, 0, -Math.PI / 2),
 };
 
-// ─── Single Die mesh ─────────────────────────────────────────────────────────
-interface DieProps {
+// ─── Exported Die mesh (usable inside ANY Canvas) ───────────────────────────
+export interface DieMeshProps {
   value: number;
   rolling: boolean;
   position: [number, number, number];
   colors: SkinColors;
+  size?: number;
 }
 
-function Die({ value, rolling, position, colors }: DieProps) {
+export function DieMesh({ value, rolling, position, colors, size = 1 }: DieMeshProps) {
   const meshRef = useRef<THREE.Mesh>(null!);
   const spinRef = useRef({ speed: new THREE.Vector3(3, 5, 2) });
   const targetQuat = useRef(new THREE.Quaternion());
   const isSettling = useRef(false);
-  // In frameloop="demand" mode we must request frames manually while animating.
-  const invalidate = useThree((s) => s.invalidate);
+  const bounceRef = useRef(0);
 
-  // Build 6 face textures (one per face) once per skin change
+  // Build 6 face textures
   const materials = useMemo(() => {
-    // BoxGeometry face material order: +X, -X, +Y, -Y, +Z, -Z
-    // Map: face 0(+X)=1, face 1(-X)=6, face 2(+Y)=2, face 3(-Y)=5, face 4(+Z)=3, face 5(-Z)=4
     const faceValues = [1, 6, 2, 5, 3, 4];
     return faceValues.map((v) => {
       const tex = makeFaceTexture(v, colors);
@@ -136,7 +119,6 @@ function Die({ value, rolling, position, colors }: DieProps) {
     });
   }, [colors]);
 
-  // Free GPU resources when the skin changes or the die unmounts (avoid leaks).
   useEffect(() => {
     return () => {
       for (const mat of materials) {
@@ -146,43 +128,52 @@ function Die({ value, rolling, position, colors }: DieProps) {
     };
   }, [materials]);
 
-  // When rolling stops, compute target quaternion for the desired value.
-  // Kick a frame so the demand loop animates the tumble / settle.
   useEffect(() => {
     if (!rolling) {
       const euler = VALUE_TO_EULER[value] ?? VALUE_TO_EULER[1];
       targetQuat.current.setFromEuler(euler);
       isSettling.current = true;
+      bounceRef.current = 1.5; // Start bounce from height
+    } else {
+      bounceRef.current = 0;
     }
-    invalidate();
-  }, [rolling, value, invalidate]);
+  }, [rolling, value]);
 
-  useFrame((state, delta) => {
+  useFrame((_state, delta) => {
     if (!meshRef.current) return;
 
     if (rolling) {
       isSettling.current = false;
-      // Tumble fast
-      meshRef.current.rotation.x += spinRef.current.speed.x * delta;
-      meshRef.current.rotation.y += spinRef.current.speed.y * delta;
-      meshRef.current.rotation.z += spinRef.current.speed.z * delta;
-      state.invalidate(); // keep the loop alive while rolling
+      // Tumble fast + bounce up and down
+      meshRef.current.rotation.x += spinRef.current.speed.x * delta * 4;
+      meshRef.current.rotation.y += spinRef.current.speed.y * delta * 4;
+      meshRef.current.rotation.z += spinRef.current.speed.z * delta * 3;
+      // Oscillate Y for a bouncy roll
+      const t = performance.now() * 0.008;
+      meshRef.current.position.y = position[1] + Math.abs(Math.sin(t)) * 0.8;
     } else if (isSettling.current) {
-      // Smooth slerp to target orientation
+      // Slerp rotation to target
       meshRef.current.quaternion.slerp(targetQuat.current, Math.min(1, delta * 6));
-      const angle = meshRef.current.quaternion.angleTo(targetQuat.current);
-      if (angle < 0.001) {
-        meshRef.current.quaternion.copy(targetQuat.current);
-        isSettling.current = false;
+      // Bounce down to resting position
+      if (bounceRef.current > 0.01) {
+        bounceRef.current *= 0.92;
+        meshRef.current.position.y = position[1] + bounceRef.current;
       } else {
-        state.invalidate(); // keep settling until aligned
+        meshRef.current.position.y = position[1];
+        bounceRef.current = 0;
+      }
+      const angle = meshRef.current.quaternion.angleTo(targetQuat.current);
+      if (angle < 0.001 && bounceRef.current < 0.01) {
+        meshRef.current.quaternion.copy(targetQuat.current);
+        meshRef.current.position.y = position[1];
+        isSettling.current = false;
       }
     }
   });
 
   return (
-    <mesh ref={meshRef} position={position} castShadow={false}>
-      <boxGeometry args={[1, 1, 1]} />
+    <mesh ref={meshRef} position={position} castShadow>
+      <boxGeometry args={[size, size, size]} />
       {materials.map((mat, i) => (
         <primitive key={i} object={mat} attach={`material-${i}`} />
       ))}
@@ -190,7 +181,7 @@ function Die({ value, rolling, position, colors }: DieProps) {
   );
 }
 
-// ─── Public component ────────────────────────────────────────────────────────
+// ─── Standalone component (with its own Canvas) for use outside R3F ─────────
 interface Dice3DProps {
   dice: [number, number];
   rolling: boolean;
@@ -198,9 +189,7 @@ interface Dice3DProps {
 }
 
 export function Dice3D({ dice, rolling, skin = 'neon' }: Dice3DProps) {
-  const skinKey: SkinName =
-    skin === 'jade' ? 'jade' : skin === 'wood' ? 'wood' : 'neon';
-  const colors = SKINS[skinKey];
+  const colors = getSkinColors(skin);
 
   return (
     <Canvas
@@ -214,18 +203,8 @@ export function Dice3D({ dice, rolling, skin = 'neon' }: Dice3DProps) {
       <ambientLight intensity={0.6} />
       <directionalLight position={[4, 6, 4]} intensity={1.2} />
 
-      <Die
-        value={dice[0]}
-        rolling={rolling}
-        position={[-0.85, 0, 0]}
-        colors={colors}
-      />
-      <Die
-        value={dice[1]}
-        rolling={rolling}
-        position={[ 0.85, 0, 0]}
-        colors={colors}
-      />
+      <DieMesh value={dice[0]} rolling={rolling} position={[-0.85, 0, 0]} colors={colors} />
+      <DieMesh value={dice[1]} rolling={rolling} position={[ 0.85, 0, 0]} colors={colors} />
     </Canvas>
   );
 }

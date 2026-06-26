@@ -1,8 +1,9 @@
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { Token3D } from './Token3D';
+import { DieMesh, getSkinColors } from './Dice3D';
 import type { GameState, Player, TileMetadata } from '../../types/game';
 import { getBoardTheme } from '../../data/boardThemes';
 
@@ -53,27 +54,64 @@ const GROUP_COLORS: Record<string, string> = {
 };
 
 // ─── 3D Grid Coordinate Math ────────────────────────────────────────────────
-const TILE_SPACING = 1.06;
-const BOARD_HALF = 5.3;
+// Mathematically perfect grid layout:
+// Corner tile: 1.5 x 1.5 units
+// Regular tile: 0.9 wide, 1.5 long
+// Board outer boundary: [-5.55, 5.55] (total size = 11.1)
+// Corner center: 5.55 - 1.5/2 = 4.8
 
 const get3DCoordinate = (id: number): [number, number, number] => {
+  // Bottom edge (0 to 10)
   if (id >= 0 && id <= 10) {
-    return [BOARD_HALF - id * TILE_SPACING, 0, BOARD_HALF];
-  } else if (id >= 11 && id <= 20) {
-    return [-BOARD_HALF, 0, BOARD_HALF - (id - 10) * TILE_SPACING];
-  } else if (id >= 21 && id <= 30) {
-    return [-BOARD_HALF + (id - 20) * TILE_SPACING, 0, -BOARD_HALF];
-  } else {
-    return [BOARD_HALF, 0, -BOARD_HALF + (id - 30) * TILE_SPACING];
+    let x = 4.8;
+    if (id > 0 && id < 10) {
+      x = 3.6 - (id - 1) * 0.9;
+    } else if (id === 10) {
+      x = -4.8;
+    }
+    return [x, 0, 4.8];
+  }
+  // Left edge (10 to 20)
+  else if (id >= 11 && id <= 20) {
+    let z = 4.8;
+    if (id > 10 && id < 20) {
+      z = 3.6 - (id - 11) * 0.9;
+    } else if (id === 20) {
+      z = -4.8;
+    }
+    return [-4.8, 0, z];
+  }
+  // Top edge (20 to 30)
+  else if (id >= 21 && id <= 30) {
+    let x = -4.8;
+    if (id > 20 && id < 30) {
+      x = -3.6 + (id - 21) * 0.9;
+    } else if (id === 30) {
+      x = 4.8;
+    }
+    return [x, 0, -4.8];
+  }
+  // Right edge (30 to 0)
+  else {
+    let z = -4.8;
+    if (id > 30 && id < 40) {
+      z = -3.6 + (id - 30) * 0.9;
+    }
+    return [4.8, 0, z];
   }
 };
 
 // ─── Tile dimensions ────────────────────────────────────────────────────────
 const getTileDimensions = (id: number): { w: number; l: number } => {
   const isCorner = id % 10 === 0;
-  if (isCorner) return { w: 1.48, l: 1.48 };
-  if ((id > 10 && id < 20) || (id > 30 && id < 40)) return { w: 1.48, l: 1.02 };
-  return { w: 1.02, l: 1.48 };
+  if (isCorner) return { w: 1.5, l: 1.5 };
+  
+  const isHorizontalSide = (id > 0 && id < 10) || (id > 20 && id < 30);
+  if (isHorizontalSide) {
+    return { w: 0.9, l: 1.5 }; // bottom/top
+  } else {
+    return { w: 1.5, l: 0.9 }; // left/right
+  }
 };
 
 // ─── Offset for multiple players on same tile ──────────────────────────────
@@ -88,8 +126,8 @@ const getTokenOffset = (playerIndex: number, totalPlayers: number): [number, num
 };
 
 // ─── HIGH-RES CanvasTexture for Tile Label ──────────────────────────────────
-// Resolution: 256 px per world unit for sharp text
-const PX_SCALE = 256;
+// Resolution: 300 px per world unit for extremely sharp text
+const PX_SCALE = 300;
 
 function makeTileTexture(
   tile: TileMetadata,
@@ -110,13 +148,12 @@ function makeTileTexture(
   const isProperty = tile.type === 'property';
 
   // ─── Background: Lighter base so text is readable ───
-  // Use a subtle dark-slate base, NOT pitch black
   ctx.fillStyle = '#1e293b';
   ctx.fillRect(0, 0, PX_W, PX_H);
 
   // ─── Thin border between tiles ───
   ctx.strokeStyle = '#334155';
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 3;
   ctx.strokeRect(1, 1, PX_W - 2, PX_H - 2);
 
   // ─── Group color strip (30% of tile height for properties) ───
@@ -135,23 +172,23 @@ function makeTileTexture(
   // ─── Owner indicator (thick bright border) ───
   if (ownerColor) {
     ctx.strokeStyle = ownerColor;
-    ctx.lineWidth = 6;
-    ctx.strokeRect(3, 3, PX_W - 6, PX_H - 6);
+    ctx.lineWidth = 8;
+    ctx.strokeRect(4, 4, PX_W - 8, PX_H - 8);
   }
 
-  // ─── Tile Name (LARGER font for readability) ───
-  const fontSize = isCorner ? 26 : 22;
+  // ─── Tile Name (SIGNIFICANTLY LARGER font for readability) ───
+  const fontSize = isCorner ? 36 : 30;
   ctx.font = `bold ${fontSize}px "Inter", "Segoe UI", Arial, sans-serif`;
   ctx.fillStyle = '#f1f5f9';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
   // Text position: below the color strip for properties, centered otherwise
-  const textStartY = isProperty && !isCorner ? PX_H * 0.52 : PX_H * 0.38;
+  const textStartY = isProperty && !isCorner ? PX_H * 0.55 : PX_H * 0.40;
 
   // Word wrap
   const words = tile.name.split(' ');
-  const maxW = PX_W - 16;
+  const maxW = PX_W - 20;
   const lines: string[] = [];
   let currentLine = '';
   for (const word of words) {
@@ -170,47 +207,47 @@ function makeTileTexture(
   for (let i = 0; i < lines.length; i++) {
     // Text shadow for contrast
     ctx.fillStyle = 'rgba(0,0,0,0.5)';
-    ctx.fillText(lines[i], PX_W / 2 + 1, startY + i * lineHeight + 1);
+    ctx.fillText(lines[i], PX_W / 2 + 1.5, startY + i * lineHeight + 1.5);
     ctx.fillStyle = '#f1f5f9';
     ctx.fillText(lines[i], PX_W / 2, startY + i * lineHeight);
   }
 
   // ─── Price (bottom area, bigger) ───
   if (tile.price && tile.type !== 'tax') {
-    ctx.font = `bold 20px "Inter", "Segoe UI", Arial, sans-serif`;
+    ctx.font = `bold 26px "Inter", "Segoe UI", Arial, sans-serif`;
     ctx.fillStyle = '#94a3b8';
-    ctx.fillText(`$${tile.price}`, PX_W / 2, PX_H * 0.85);
+    ctx.fillText(`$${tile.price}`, PX_W / 2, PX_H * 0.84);
   }
 
   // ─── Special tile icons ───
   if (tile.type === 'go') {
-    ctx.font = 'bold 36px Arial';
+    ctx.font = 'bold 52px Arial';
     ctx.fillStyle = '#4ade80';
-    ctx.fillText('→ GO', PX_W / 2, PX_H * 0.7);
+    ctx.fillText('→ GO', PX_W / 2, PX_H * 0.75);
   } else if (tile.type === 'tax') {
-    ctx.font = 'bold 22px Arial';
+    ctx.font = 'bold 32px Arial';
     ctx.fillStyle = '#fb7185';
-    ctx.fillText(`💰 $${tile.price}`, PX_W / 2, PX_H * 0.72);
+    ctx.fillText(`💰 $${tile.price}`, PX_W / 2, PX_H * 0.75);
   } else if (tile.type === 'chance') {
-    ctx.font = 'bold 36px Arial';
+    ctx.font = 'bold 54px Arial';
     ctx.fillStyle = '#fbbf24';
-    ctx.fillText('❓', PX_W / 2, PX_H * 0.65);
+    ctx.fillText('❓', PX_W / 2, PX_H * 0.72);
   } else if (tile.type === 'community_chest') {
-    ctx.font = 'bold 30px Arial';
+    ctx.font = 'bold 48px Arial';
     ctx.fillStyle = '#34d399';
-    ctx.fillText('🎁', PX_W / 2, PX_H * 0.65);
+    ctx.fillText('🎁', PX_W / 2, PX_H * 0.72);
   } else if (tile.id === 10) {
-    ctx.font = 'bold 24px Arial';
+    ctx.font = 'bold 32px Arial';
     ctx.fillStyle = '#fb7185';
-    ctx.fillText('🔒 NHÀ TÙ', PX_W / 2, PX_H * 0.65);
+    ctx.fillText('🔒 NHÀ TÙ', PX_W / 2, PX_H * 0.72);
   } else if (tile.id === 20) {
-    ctx.font = 'bold 22px Arial';
+    ctx.font = 'bold 32px Arial';
     ctx.fillStyle = '#94a3b8';
-    ctx.fillText('🅿️ NGHỈ', PX_W / 2, PX_H * 0.65);
+    ctx.fillText('🅿️ NGHỈ', PX_W / 2, PX_H * 0.72);
   } else if (tile.id === 30) {
-    ctx.font = 'bold 22px Arial';
+    ctx.font = 'bold 32px Arial';
     ctx.fillStyle = '#fb7185';
-    ctx.fillText('🚔 VÀO TÙ!', PX_W / 2, PX_H * 0.65);
+    ctx.fillText('🚔 VÀO TÙ!', PX_W / 2, PX_H * 0.72);
   }
 
   const tex = new THREE.CanvasTexture(c);
@@ -220,7 +257,7 @@ function makeTileTexture(
   return tex;
 }
 
-// ─── Component: Moving Token with Lerp Animation ───────────────────────────
+// ─── Component: Moving Token with Hop Animation ────────────────────────────
 function AnimatedToken({
   skinId, color, currentTileId, playerIndex, totalPlayers,
 }: {
@@ -228,6 +265,9 @@ function AnimatedToken({
   playerIndex: number; totalPlayers: number;
 }) {
   const ref = useRef<THREE.Group>(null!);
+  const lastTileId = useRef<number>(currentTileId);
+  const animStartPos = useRef<THREE.Vector3>(new THREE.Vector3());
+  const progress = useRef<number>(1); // 1 = animation complete
 
   const targetPosition = useMemo(() => {
     const coord = get3DCoordinate(currentTileId);
@@ -235,14 +275,45 @@ function AnimatedToken({
     return new THREE.Vector3(coord[0] + offset[0], coord[1] + offset[1], coord[2] + offset[2]);
   }, [currentTileId, playerIndex, totalPlayers]);
 
+  useEffect(() => {
+    if (currentTileId !== lastTileId.current) {
+      if (ref.current) {
+        animStartPos.current.copy(ref.current.position);
+      } else {
+        animStartPos.current.copy(targetPosition);
+      }
+      
+      const diff = Math.abs(currentTileId - lastTileId.current);
+      const isTeleport = diff > 1 && diff < 39; // 39 is wrap around 0
+      
+      lastTileId.current = currentTileId;
+      progress.current = isTeleport ? 0.8 : 0; // Teleports snap quickly
+    }
+  }, [currentTileId, targetPosition]);
+
   useFrame((_s, delta) => {
-    if (ref.current) {
-      ref.current.position.lerp(targetPosition, Math.min(1, delta * 8.5));
+    if (!ref.current) return;
+    if (progress.current < 1) {
+      // Step duration is 200ms in Board.tsx. Complete animation in ~170ms.
+      progress.current = Math.min(1, progress.current + delta * 6.0);
+      
+      const t = progress.current;
+      const easeT = t * t * (3 - 2 * t); // smoothstep
+      
+      ref.current.position.x = THREE.MathUtils.lerp(animStartPos.current.x, targetPosition.x, easeT);
+      ref.current.position.z = THREE.MathUtils.lerp(animStartPos.current.z, targetPosition.z, easeT);
+      
+      const baseHeight = THREE.MathUtils.lerp(animStartPos.current.y, targetPosition.y, easeT);
+      // Beautiful parabolic jump height: sin(t * pi) * hopHeight
+      const hopY = Math.sin(t * Math.PI) * 0.9;
+      ref.current.position.y = baseHeight + hopY;
+    } else {
+      ref.current.position.lerp(targetPosition, Math.min(1, delta * 15));
     }
   });
 
   return (
-    <group ref={ref} position={targetPosition} scale={[1.8, 1.8, 1.8]}>
+    <group ref={ref} scale={[1.8, 1.8, 1.8]}>
       <Token3D skinId={skinId} color={color} />
     </group>
   );
@@ -263,13 +334,12 @@ function Tile3D({
     [tile, w, l, groupColor, cellColor, ownerColor],
   );
 
-  // Use group color tint for the body sides to give visual distinction
   const isProperty = tile.type === 'property' && tile.id % 10 !== 0;
   const sideColor = isProperty ? groupColor : cellColor;
 
   return (
     <group position={[cx, 0, cz]}>
-      {/* Tile body (thicker for more 3D feel) */}
+      {/* Tile body */}
       <mesh position={[0, 0.03, 0]} receiveShadow castShadow>
         <boxGeometry args={[w, 0.06, l]} />
         <meshStandardMaterial
@@ -280,7 +350,7 @@ function Tile3D({
           transparent
         />
       </mesh>
-      {/* Tile top face with CanvasTexture label */}
+      {/* Tile top face */}
       <mesh position={[0, 0.061, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[w - 0.02, l - 0.02]} />
         <meshBasicMaterial map={topTexture} />
@@ -309,10 +379,14 @@ export function GameBoard3D({
   getPlayersOnTile: _getPlayersOnTile,
   getOwnerColor,
   getCurrentRent: _getCurrentRent,
+  dice,
+  localDiceRolling,
   hudContent,
 }: GameBoard3DProps) {
   const boardTheme = getBoardTheme(gameState.settings?.boardSkin);
   const themeColors = THEME_HEX[boardTheme.id] || THEME_HEX.neon;
+
+  const diceColors = useMemo(() => getSkinColors(gameState.settings?.diceSkin), [gameState.settings?.diceSkin]);
 
   return (
     <div className="w-full h-full relative select-none">
@@ -355,13 +429,13 @@ export function GameBoard3D({
 
         {/* ─── 1. Board Base (frame) ─── */}
         <mesh position={[0, -0.02, 0]} receiveShadow>
-          <boxGeometry args={[13, 0.04, 13]} />
+          <boxGeometry args={[11.3, 0.04, 11.3]} />
           <meshStandardMaterial color={themeColors.frame} roughness={0.35} metalness={0.2} />
         </mesh>
 
         {/* ─── 2. Center floor (slightly elevated) ─── */}
         <mesh position={[0, 0.005, 0]} receiveShadow>
-          <boxGeometry args={[9.6, 0.01, 9.6]} />
+          <boxGeometry args={[8.1, 0.01, 8.1]} />
           <meshStandardMaterial color={themeColors.center} roughness={0.5} metalness={0.05} />
         </mesh>
 
@@ -398,13 +472,33 @@ export function GameBoard3D({
           );
         })}
 
+        {/* ─── 4.5. Render 3D Rolling Dice directly on the Board ─── */}
+        {(localDiceRolling || gameState.diceRolled) && (
+          <group position={[0, 0, 0]}>
+            <DieMesh
+              value={dice[0]}
+              rolling={localDiceRolling}
+              position={[-2.4, 0.35, 0.4]}
+              colors={diceColors}
+              size={0.6}
+            />
+            <DieMesh
+              value={dice[1]}
+              rolling={localDiceRolling}
+              position={[2.4, 0.35, -0.4]}
+              colors={diceColors}
+              size={0.6}
+            />
+          </group>
+        )}
+
         {/* ─── 5. Center HUD — FLAT on board surface ─── */}
         <Html
           center
           transform
           position={[0, 0.08, 0]}
           rotation={[-Math.PI / 2, 0, 0]}
-          scale={0.5}
+          scale={0.8}
           pointerEvents="auto"
           style={{ pointerEvents: 'auto' }}
         >

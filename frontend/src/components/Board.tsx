@@ -1,9 +1,8 @@
-import { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { CenterStageControls } from './CenterStageControls';
 import { BuildModal } from './modals/BuildModal';
 import { GameBoard3D } from './scene3d/GameBoard3D';
 
-const Dice3D = lazy(() => import('./scene3d/Dice3D').then((m) => ({ default: m.Dice3D })));
 import type { GameState, Player, TileMetadata } from '../types/game';
 import boardDataRaw from '../data/board.json';
 import { playClickSound } from '../utils/sound';
@@ -234,28 +233,28 @@ export function Board({
       const headerGradient = groupColors[tile.group] || 'from-slate-700 to-slate-800';
 
       return (
-        <div className="w-full max-w-[310px] bg-slate-950 border-2 border-slate-800 rounded-2xl overflow-hidden shadow-2xl text-left font-sans mx-auto shrink-0 select-none">
-          <div className={`bg-gradient-to-r ${headerGradient} py-3 px-4 text-center text-white border-b-2 border-slate-950`}>
-            <span className="text-[11px] uppercase font-black tracking-widest text-white/80 flex items-center justify-center gap-1.5">
-              <FileText size={12} /> Bằng Khoán Đất
+        <div className="w-full max-w-[340px] bg-slate-950 border-2 border-slate-800 rounded-2xl overflow-hidden shadow-2xl text-left font-sans mx-auto shrink-0 select-none animate-fadeIn">
+          <div className={`bg-gradient-to-r ${headerGradient} py-4 px-5 text-center text-white border-b-2 border-slate-950`}>
+            <span className="text-[12px] uppercase font-black tracking-widest text-white/80 flex items-center justify-center gap-1.5">
+              <FileText size={14} /> Bằng Khoán Đất
             </span>
-            <h4 className="text-base font-black uppercase tracking-wide text-white mt-1">{tile.name}</h4>
+            <h4 className="text-lg font-black uppercase tracking-wide text-white mt-1.5">{tile.name}</h4>
           </div>
-          <div className="p-4 space-y-2.5 text-[13px] text-slate-300">
+          <div className="p-5 space-y-3 text-sm text-slate-350">
             {tile.price && (
-              <div className="flex justify-between border-b border-slate-900 pb-1.5 font-bold text-slate-200">
+              <div className="flex justify-between border-b border-slate-900 pb-2 font-bold text-slate-200">
                 <span>Giá mua:</span>
                 <span className="text-emerald-400 font-mono">${tile.price}</span>
               </div>
             )}
             {tile.rent && (
-              <div className="space-y-1">
-                <div className="flex justify-between text-slate-200 font-semibold mb-1">
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-slate-250 font-semibold mb-1">
                   <span>Tiền thuê đất:</span>
                   <span className="font-mono text-slate-100">${tile.rent[0]}</span>
                 </div>
                 {tile.type === 'property' && (
-                  <div className="space-y-1 text-[11.5px] text-slate-400 mt-0.5 pl-1.5">
+                  <div className="space-y-1.5 text-xs text-slate-400 mt-1 pl-2">
                     <div className="flex justify-between">
                       <span>• Với 1 Nhà:</span>
                       <span className="font-mono">${tile.rent[1]}</span>
@@ -281,7 +280,7 @@ export function Board({
               </div>
             )}
             {tile.housePrice && (
-              <div className="flex justify-between border-t border-slate-900 pt-2 text-[11px] text-slate-500 font-bold">
+              <div className="flex justify-between border-t border-slate-900 pt-2.5 text-[12px] text-slate-500 font-bold">
                 <span>Giá xây nhà:</span>
                 <span className="font-mono">${tile.housePrice}/căn</span>
               </div>
@@ -309,7 +308,7 @@ export function Board({
     // RENDER CHO NGƯỜI CHƠI KHÁC (SPECTATOR VIEW)
     if (!isMyTurn) {
       let spectatorMsg = '';
-      let specClass = 'text-slate-400';
+      let specClass = 'text-slate-450';
       if (modalType === 'buy_property') {
         spectatorMsg = `Đang chờ ${activePlayer?.name} quyết định mua ${boardData[payload?.tileId || 0]?.name}...`;
       } else if (modalType === 'pay_rent') {
@@ -321,10 +320,10 @@ export function Board({
         specClass = 'text-orange-400';
       } else if (modalType === 'jail') {
         spectatorMsg = `${activePlayer?.name} đang ở trong Nhà Tù.`;
-        specClass = 'text-red-450';
+        specClass = 'text-red-400';
       } else if (modalType === 'chance') {
         spectatorMsg = `${activePlayer?.name} rút thẻ Cơ Hội: "${payload?.cardText}"`;
-        specClass = 'text-amber-450 font-semibold';
+        specClass = 'text-amber-400 font-semibold';
       } else if (modalType === 'community_chest') {
         spectatorMsg = `${activePlayer?.name} rút thẻ Quỹ Cộng Đồng: "${payload?.cardText}"`;
         specClass = 'text-emerald-450 font-semibold';
@@ -334,9 +333,9 @@ export function Board({
       }
 
       return (
-        <div className="w-full bg-slate-900/90 border border-slate-800 rounded-2xl p-3 shadow-xl flex items-center justify-center gap-2.5 animate-fadeIn">
-          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping shrink-0" />
-          <p className={`text-[10px] tracking-wide uppercase font-bold text-center ${specClass}`}>
+        <div className="w-full bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-xl flex items-center justify-center gap-3 animate-fadeIn">
+          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping shrink-0" />
+          <p className={`text-xs tracking-wide uppercase font-bold text-center ${specClass}`}>
             {spectatorMsg}
           </p>
         </div>
@@ -349,39 +348,39 @@ export function Board({
         const tilePrice = boardData[payload?.tileId || 0]?.price || 0;
         const hasEnoughMoney = activePlayer && activePlayer.money >= tilePrice;
         return (
-          <div className="w-full bg-slate-900/98 border border-emerald-500/30 rounded-2xl p-3.5 shadow-2xl flex flex-col gap-3 animate-fadeIn">
+          <div className="w-full bg-slate-900/98 border border-emerald-500/30 rounded-2xl p-4 shadow-2xl flex flex-col gap-4 animate-fadeIn">
             {/* Title row */}
-            <div className="flex items-center gap-2 select-none">
-              <div className="w-7 h-7 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-                <Coins className="text-emerald-400" size={14} />
+            <div className="flex items-center gap-3 select-none">
+              <div className="w-9 h-9 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                <Coins className="text-emerald-400" size={18} />
               </div>
               <div>
-                <h3 className="text-xs font-bold text-white uppercase tracking-wider">Mua Tài Sản?</h3>
-                <p className="text-[9.5px] text-slate-450 leading-snug mt-0">
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider">Mua Tài Sản?</h3>
+                <p className="text-[11px] text-slate-450 leading-snug mt-0.5">
                   Quyết định mua hoặc bỏ qua mảnh đất này để tiếp tục ván đấu.
                 </p>
               </div>
             </div>
 
-            {/* Deed card — centered, bigger */}
+            {/* Deed card — centered */}
             <div className="flex justify-center">
               {payload?.tileId !== undefined && renderTitleDeed(payload.tileId)}
             </div>
 
             {/* Cảnh báo thiếu tiền */}
             {!hasEnoughMoney && (
-              <div className="text-xs font-bold text-red-400 flex items-center justify-center gap-1 bg-red-950/20 border border-red-500/15 py-1.5 px-3 rounded-xl animate-pulse">
-                <ShieldAlert size={14} className="shrink-0" />
+              <div className="text-xs font-bold text-red-400 flex items-center justify-center gap-1.5 bg-red-950/20 border border-red-500/15 py-2 px-3 rounded-xl animate-pulse">
+                <ShieldAlert size={16} className="shrink-0" />
                 <span>Không đủ tiền mua! (Thiếu ${tilePrice - (activePlayer?.money || 0)})</span>
               </div>
             )}
 
             {/* Action buttons */}
-            <div className="flex gap-3">
+            <div className="flex gap-4">
               <button
                 onClick={buyProperty}
                 disabled={!hasEnoughMoney}
-                className={`flex-1 py-2 text-[11px] rounded-xl transition-all uppercase tracking-wider border font-bold ${
+                className={`flex-1 py-2.5 text-xs rounded-xl transition-all uppercase tracking-wider border font-bold ${
                   hasEnoughMoney
                     ? "bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white border-emerald-300/30 shadow-[0_0_12px_rgba(16,185,129,0.3)] hover:shadow-[0_0_18px_rgba(16,185,129,0.5)] active:scale-[0.98]"
                     : "bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed opacity-50"
@@ -391,7 +390,7 @@ export function Board({
               </button>
               <button
                 onClick={declineBuy}
-                className="flex-1 py-2 bg-transparent hover:bg-slate-800 border border-slate-700 hover:border-slate-600 text-slate-400 hover:text-slate-300 font-bold text-[11px] rounded-xl transition-all uppercase tracking-wider"
+                className="flex-1 py-2.5 bg-transparent hover:bg-slate-800 border border-slate-700 hover:border-slate-600 text-slate-400 hover:text-slate-300 font-bold text-xs rounded-xl transition-all uppercase tracking-wider"
               >
                 Bỏ qua
               </button>
@@ -401,23 +400,23 @@ export function Board({
 
       case 'pay_rent':
         return (
-          <div className="w-full bg-slate-900/95 border border-rose-500/25 rounded-2xl p-3 shadow-2xl flex flex-col md:flex-row gap-4 items-center justify-between animate-fadeIn relative">
+          <div className="w-full bg-slate-900/95 border border-rose-500/25 rounded-2xl p-4 shadow-2xl flex flex-col md:flex-row gap-4 items-center justify-between animate-fadeIn relative">
             <div className="flex-grow text-center md:text-left select-none">
-              <div className="w-8 h-8 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mb-1.5 mx-auto md:mx-0 shrink-0">
-                <Coins className="text-rose-450" size={16} />
+              <div className="w-9 h-9 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mb-2 mx-auto md:mx-0 shrink-0">
+                <Coins className="text-rose-450" size={18} />
               </div>
-              <h3 className="text-xs font-black text-rose-400 uppercase tracking-wider">Trả Tiền Thuê</h3>
-              <p className="text-[9.5px] text-slate-400 mt-1 max-w-[200px] leading-normal">
+              <h3 className="text-sm font-black text-rose-400 uppercase tracking-wider">Trả Tiền Thuê</h3>
+              <p className="text-xs text-slate-400 mt-1 max-w-[220px] leading-normal">
                 Bạn dừng chân tại đất của <span className="font-bold text-slate-200">{players.find(p => p.id === payload?.ownerId)?.name}</span>.
               </p>
             </div>
             
-            <div className="w-full md:w-[140px] py-2.5 px-3 bg-slate-950 border border-slate-850 rounded-xl my-1 md:my-0 text-[9.5px] space-y-0.5 text-left shrink-0">
-              <div className="flex justify-between text-slate-500 font-medium">
+            <div className="w-full md:w-[160px] py-3 px-4 bg-slate-950 border border-slate-850 rounded-xl my-2 md:my-0 text-xs space-y-1 text-left shrink-0">
+              <div className="flex justify-between text-slate-400 font-medium">
                 <span>Mảnh đất:</span>
-                <span className="font-bold text-slate-300 truncate max-w-[80px]">{boardData[payload?.tileId || 0]?.name}</span>
+                <span className="font-bold text-slate-250 truncate max-w-[90px]">{boardData[payload?.tileId || 0]?.name}</span>
               </div>
-              <div className="flex justify-between border-t border-slate-900 pt-1 font-black text-rose-450 text-[11px]">
+              <div className="flex justify-between border-t border-slate-900 pt-1.5 font-black text-rose-450 text-sm">
                 <span>Tổng thuê:</span>
                 <span className="font-mono">${payload?.amount}</span>
               </div>
@@ -425,28 +424,28 @@ export function Board({
 
             <button
               onClick={endTurn}
-              className="w-full md:w-[120px] py-2.5 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-450 hover:to-pink-500 text-white font-black text-[10px] rounded-xl shadow-md transition-all active:scale-[0.98] uppercase tracking-wider shrink-0 flex items-center justify-center gap-1 border border-rose-400/20"
+              className="w-full md:w-[130px] py-3 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-450 hover:to-pink-500 text-white font-black text-xs rounded-xl shadow-md transition-all active:scale-[0.98] uppercase tracking-wider shrink-0 flex items-center justify-center gap-1.5 border border-rose-400/20"
             >
-              Xác Nhận <ArrowRight size={12} />
+              Xác Nhận <ArrowRight size={14} />
             </button>
           </div>
         );
 
       case 'pay_tax':
         return (
-          <div className="w-full bg-slate-900/95 border border-orange-500/25 rounded-2xl p-3 shadow-2xl flex flex-col md:flex-row gap-4 items-center justify-between animate-fadeIn relative">
+          <div className="w-full bg-slate-900/95 border border-orange-500/25 rounded-2xl p-4 shadow-2xl flex flex-col md:flex-row gap-4 items-center justify-between animate-fadeIn relative">
             <div className="flex-grow text-center md:text-left select-none">
-              <div className="w-8 h-8 rounded-full bg-orange-500/10 border border-orange-500/20 flex items-center justify-center mb-1.5 mx-auto md:mx-0 shrink-0">
-                <ShieldAlert className="text-orange-450" size={16} />
+              <div className="w-9 h-9 rounded-full bg-orange-500/10 border border-orange-500/20 flex items-center justify-center mb-2 mx-auto md:mx-0 shrink-0">
+                <ShieldAlert className="text-orange-450" size={18} />
               </div>
-              <h3 className="text-xs font-black text-orange-400 uppercase tracking-wider">Khấu Trừ Thuế</h3>
-              <p className="text-[9.5px] text-slate-400 mt-1 max-w-[200px] leading-normal">
+              <h3 className="text-sm font-black text-orange-400 uppercase tracking-wider">Khấu Trừ Thuế</h3>
+              <p className="text-xs text-slate-400 mt-1 max-w-[220px] leading-normal">
                 Nộp thuế theo luật định để cân bằng tài chính quốc gia.
               </p>
             </div>
             
-            <div className="w-full md:w-[130px] py-2.5 px-3 bg-slate-950 border border-slate-850 rounded-xl my-1.5 md:my-0 text-left shrink-0 select-none">
-              <div className="flex justify-between font-black text-orange-400 text-xs">
+            <div className="w-full md:w-[150px] py-3 px-4 bg-slate-950 border border-slate-850 rounded-xl my-2 md:my-0 text-left shrink-0 select-none">
+              <div className="flex justify-between font-black text-orange-400 text-sm">
                 <span>Số thuế:</span>
                 <span className="font-mono">${payload?.amount}</span>
               </div>
@@ -454,7 +453,7 @@ export function Board({
 
             <button
               onClick={endTurn}
-              className="w-full md:w-[120px] py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-450 hover:to-amber-450 text-white font-black text-[10px] rounded-xl shadow-md transition-all active:scale-[0.98] uppercase tracking-wider shrink-0 border border-orange-400/20"
+              className="w-full md:w-[130px] py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-450 hover:to-amber-450 text-white font-black text-xs rounded-xl shadow-md transition-all active:scale-[0.98] uppercase tracking-wider shrink-0 border border-orange-400/20"
             >
               Nộp Thuế
             </button>
@@ -463,24 +462,24 @@ export function Board({
 
       case 'jail':
         return (
-          <div className="w-full bg-slate-900/95 border border-red-500/25 rounded-2xl p-3 shadow-2xl flex flex-col md:flex-row gap-4 items-center justify-between animate-fadeIn relative">
+          <div className="w-full bg-slate-900/95 border border-red-500/25 rounded-2xl p-4 shadow-2xl flex flex-col md:flex-row gap-4 items-center justify-between animate-fadeIn relative">
             <div className="flex-grow text-center md:text-left select-none">
-              <div className="w-8 h-8 rounded-full bg-red-650/10 border border-red-650/20 flex items-center justify-center mb-1.5 mx-auto md:mx-0 shrink-0">
-                <Lock className="text-red-500 animate-pulse" size={16} />
+              <div className="w-9 h-9 rounded-full bg-red-650/10 border border-red-650/20 flex items-center justify-center mb-2 mx-auto md:mx-0 shrink-0">
+                <Lock className="text-red-500 animate-pulse" size={18} />
               </div>
-              <h3 className="text-xs font-black text-red-550 uppercase tracking-wider">Vào Nhà Tù</h3>
-              <p className="text-[9.5px] text-slate-400 mt-1 leading-normal">
+              <h3 className="text-sm font-black text-red-555 uppercase tracking-wider">Vào Nhà Tù</h3>
+              <p className="text-xs text-slate-400 mt-1 leading-normal">
                 Bị tạm giam do dừng vào ô cảnh sát hoặc rút phải thẻ phạt.
               </p>
             </div>
             
-            <p className="text-[8.5px] text-slate-500 leading-normal max-w-[130px] my-1.5 md:my-0 text-center md:text-left shrink-0 select-none">
+            <p className="text-[10px] text-slate-500 leading-normal max-w-[140px] my-2 md:my-0 text-center md:text-left shrink-0 select-none">
               Thoát án ở lượt sau nếu đổ xúc xắc đôi hoặc nộp $50.
             </p>
 
             <button
               onClick={endTurn}
-              className="w-full md:w-[120px] py-2.5 bg-slate-800 hover:bg-slate-750 border border-slate-700/60 text-white font-black text-[10px] rounded-xl transition-all uppercase tracking-wider shrink-0"
+              className="w-full md:w-[130px] py-3 bg-slate-800 hover:bg-slate-750 border border-slate-700/60 text-white font-black text-xs rounded-xl transition-all uppercase tracking-wider shrink-0"
             >
               Chấp Nhận
             </button>
@@ -491,47 +490,47 @@ export function Board({
       case 'community_chest':
         const isChance = modalType === 'chance';
         return (
-          <div className={`w-full bg-slate-900/95 border rounded-2xl p-3 shadow-2xl flex flex-col md:flex-row gap-4 items-center justify-between animate-fadeIn relative ${
+          <div className={`w-full bg-slate-900/95 border rounded-2xl p-4 shadow-2xl flex flex-col md:flex-row gap-4 items-center justify-between animate-fadeIn relative ${
             isChance ? 'border-amber-400/25' : 'border-emerald-500/25'
           }`}>
             <div className="flex-grow text-center md:text-left select-none">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-1.5 mx-auto md:mx-0 shrink-0 ${
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center mb-2 mx-auto md:mx-0 shrink-0 ${
                 isChance ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-emerald-500/10 border border-emerald-500/20'
               }`}>
-                {isChance ? <HelpCircle className="text-amber-400" size={16} /> : <Gift className="text-emerald-450" size={16} />}
+                {isChance ? <HelpCircle className="text-amber-400" size={18} /> : <Gift className="text-emerald-450" size={18} />}
               </div>
-              <h3 className={`text-xs font-black uppercase tracking-wider ${isChance ? 'text-amber-400' : 'text-emerald-450'}`}>
+              <h3 className={`text-sm font-black uppercase tracking-wider ${isChance ? 'text-amber-400' : 'text-emerald-450'}`}>
                 {isChance ? 'Thẻ Cơ Hội' : 'Quỹ Cộng Đồng'}
               </h3>
             </div>
             
-            <div className="w-full md:w-[170px] p-2.5 bg-slate-950 border border-slate-850 rounded-xl my-1.5 md:my-0 text-[9.5px] font-bold leading-normal text-slate-200 text-center shrink-0">
+            <div className="w-full md:w-[200px] p-3 bg-slate-950 border border-slate-850 rounded-xl my-2 md:my-0 text-xs font-bold leading-normal text-slate-200 text-center shrink-0">
               "{payload?.cardText}"
             </div>
 
             <button
               onClick={endTurn}
-              className="w-full md:w-[120px] py-2.5 bg-gradient-to-r from-indigo-500 to-indigo-650 hover:from-indigo-450 hover:to-indigo-550 text-white font-black text-[10px] rounded-xl shadow-md transition-all uppercase tracking-wider shrink-0 flex items-center justify-center gap-1 border border-indigo-400/20"
+              className="w-full md:w-[130px] py-3 bg-gradient-to-r from-indigo-500 to-indigo-650 hover:from-indigo-450 hover:to-indigo-550 text-white font-black text-xs rounded-xl shadow-md transition-all uppercase tracking-wider shrink-0 flex items-center justify-center gap-1.5 border border-indigo-400/20"
             >
-              Tiếp Tục <ArrowRight size={12} />
+              Tiếp Tục <ArrowRight size={14} />
             </button>
           </div>
         );
 
       case 'bankruptcy':
         return (
-          <div className="w-full bg-slate-900/95 border border-red-500/25 rounded-2xl p-3 shadow-2xl flex flex-col md:flex-row gap-4 items-center justify-between animate-fadeIn relative">
+          <div className="w-full bg-slate-900/95 border border-red-500/25 rounded-2xl p-4 shadow-2xl flex flex-col md:flex-row gap-4 items-center justify-between animate-fadeIn relative">
             <div className="flex-grow text-center md:text-left select-none">
-              <div className="w-8 h-8 rounded-full bg-red-900/10 border border-red-900/20 flex items-center justify-center mb-1.5 mx-auto md:mx-0 shrink-0">
-                <Skull className="text-red-500 animate-bounce" size={16} />
+              <div className="w-9 h-9 rounded-full bg-red-900/10 border border-red-900/20 flex items-center justify-center mb-2 mx-auto md:mx-0 shrink-0">
+                <Skull className="text-red-500 animate-bounce" size={18} />
               </div>
-              <h3 className="text-xs font-black text-red-550 uppercase tracking-wider">Khủng Hoảng Nợ</h3>
-              <p className="text-[9px] text-slate-400 mt-1 max-w-[180px] leading-normal">
+              <h3 className="text-sm font-black text-red-555 uppercase tracking-wider">Khủng Hoảng Nợ</h3>
+              <p className="text-[10px] text-slate-400 mt-1 max-w-[200px] leading-normal">
                 Không đủ tiền mặt để thực hiện nghĩa vụ tài chính!
               </p>
             </div>
             
-            <div className="w-full md:w-[130px] py-2 px-2.5 bg-slate-950 border border-slate-850 rounded-xl my-1.5 md:my-0 text-[8.5px] font-mono text-red-350 text-left shrink-0 select-none">
+            <div className="w-full md:w-[150px] py-2.5 px-3.5 bg-slate-950 border border-slate-850 rounded-xl my-2 md:my-0 text-[10px] font-mono text-red-350 text-left shrink-0 select-none">
               <div className="flex justify-between">
                 <span>Nợ phạt:</span>
                 <span>${payload?.amount}</span>
@@ -544,7 +543,7 @@ export function Board({
 
             <button
               onClick={declareBankruptcy}
-              className="w-full md:w-[120px] py-2.5 bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-550 hover:to-rose-600 text-white font-black text-[10px] rounded-xl shadow-md transition-all uppercase tracking-wider shrink-0 border border-red-400/20"
+              className="w-full md:w-[130px] py-3 bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-550 hover:to-rose-600 text-white font-black text-xs rounded-xl shadow-md transition-all uppercase tracking-wider shrink-0 border border-red-400/20"
             >
               Phá Sản
             </button>
@@ -558,19 +557,19 @@ export function Board({
 
   // HUD content rendered inside 3D scene
   const hudContent = (
-    <div className={`bg-slate-950/85 backdrop-blur-md border border-slate-800/60 rounded-2xl shadow-2xl p-3.5 flex flex-col items-center gap-2`}>
+    <div className="bg-slate-950/90 backdrop-blur-md border border-slate-800/65 rounded-2xl shadow-2xl p-4.5 flex flex-col items-center gap-3 w-full">
       {/* TOP: Logo & Room & Turn */}
-      <div className="flex flex-col items-center gap-1.5 w-full">
-        <div className="flex items-center justify-center gap-2">
-          <h2 className="text-sm font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-br from-indigo-400 to-cyan-400 uppercase">
+      <div className="flex flex-col items-center gap-2 w-full select-none">
+        <div className="flex items-center justify-center gap-3">
+          <h2 className="text-base font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-br from-indigo-400 to-cyan-400 uppercase">
             Cờ Tỷ Phú
           </h2>
-          <span className="text-[7.5px] text-slate-500 font-bold uppercase tracking-wider bg-slate-900/60 px-1.5 py-0.5 rounded-md border border-slate-800">
+          <span className="text-[9.5px] text-slate-400 font-bold uppercase tracking-wider bg-slate-900/80 px-2 py-0.5 rounded-md border border-slate-850">
             Phòng: {gameState.roomCode}
           </span>
         </div>
         {activePlayer && !winnerId && (
-          <div className="px-4 py-1.5 bg-slate-900/90 border border-slate-800 rounded-full shadow flex items-center gap-1.5 text-[8.5px] font-black tracking-wider uppercase">
+          <div className="px-4.5 py-2 bg-slate-900/95 border border-slate-850 rounded-full shadow flex items-center gap-2 text-[10px] font-black tracking-wider uppercase">
             <span className="w-1.5 h-1.5 rounded-full animate-ping shrink-0" style={{ backgroundColor: activePlayer.color }} />
             <span className="text-slate-400">LƯỢT:</span>
             <span style={{ color: activePlayer.color }}>{activePlayer.name}</span>
@@ -578,28 +577,52 @@ export function Board({
         )}
       </div>
 
-      {/* MIDDLE: Dice */}
-      <div className="flex flex-col items-center justify-center w-full py-1 min-h-[100px]">
-        <div className="w-48 h-28 relative">
-          <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-[11px] text-slate-500">🎲 …</div>}>
-            <Dice3D dice={dice} rolling={localDiceRolling} skin={gameState.settings?.diceSkin} />
-          </Suspense>
-        </div>
-        {diceRevealActive ? (
-          <div className="text-sm font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-indigo-400 font-mono mt-1 animate-pulse">
-            {dice[0]} + {dice[1]} = {dice[0] + dice[1]}
+      {/* MIDDLE: Dice Result Badge */}
+      <div className="flex flex-col items-center justify-center w-full py-3 min-h-[90px] select-none">
+        {localDiceRolling ? (
+          <div className="flex items-center gap-3 animate-bounce">
+            <span className="text-4xl animate-spin inline-block">🎲</span>
+            <span className="text-base font-black tracking-widest text-indigo-400 uppercase animate-pulse">
+              Đang đổ xúc xắc...
+            </span>
+            <span className="text-4xl animate-spin inline-block" style={{ animationDirection: 'reverse' }}>🎲</span>
+          </div>
+        ) : diceRevealActive ? (
+          <div className="flex flex-col items-center gap-1.5 animate-fadeIn">
+            <div className="flex items-center gap-3">
+              <span className="text-4xl bg-slate-900 border border-slate-800 px-3.5 py-1.5 rounded-xl font-mono text-cyan-300 font-black shadow-lg">
+                {dice[0]}
+              </span>
+              <span className="text-2xl text-slate-500 font-black">+</span>
+              <span className="text-4xl bg-slate-900 border border-slate-800 px-3.5 py-1.5 rounded-xl font-mono text-cyan-300 font-black shadow-lg">
+                {dice[1]}
+              </span>
+            </div>
+            <div className="text-[13px] font-black tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-300 uppercase mt-1">
+              Thực hiện di chuyển: {dice[0] + dice[1]} ô!
+            </div>
           </div>
         ) : !diceRolled && isMyTurn ? (
-          <span className="text-[11px] text-indigo-300 font-bold uppercase tracking-wider mt-1 animate-pulse">Lượt của bạn — Đổ xúc xắc!</span>
+          <div className="flex flex-col items-center gap-1">
+            <span className="text-3xl animate-bounce">🎲</span>
+            <span className="text-[12px] text-indigo-300 font-black uppercase tracking-widest animate-pulse mt-1">
+              Đến lượt bạn — Hãy đổ xúc xắc!
+            </span>
+          </div>
         ) : (
-          <span className="text-[11px] text-slate-500 font-mono mt-1">Xúc xắc: {dice[0]} + {dice[1]}</span>
+          <div className="flex items-center gap-2 bg-slate-900/60 border border-slate-900/60 px-4 py-2 rounded-xl">
+            <span className="text-lg">🎲</span>
+            <span className="text-[11px] text-slate-400 font-mono">
+              Kết quả: <span className="text-slate-200 font-bold">{dice[0]}</span> + <span className="text-slate-200 font-bold">{dice[1]}</span> = <span className="text-emerald-400 font-black">{dice[0] + dice[1]}</span>
+            </span>
+          </div>
         )}
       </div>
 
       {/* BOTTOM: Controls & Logs */}
-      <div className="w-full flex flex-col items-center gap-1.5">
+      <div className="w-full flex flex-col items-center gap-2">
         {isAnimationDone && !gameState.activeModal && (
-          <div className="w-full max-w-[220px] flex justify-center">
+          <div className="w-full max-w-[280px] flex justify-center">
             <CenterStageControls
               isMyTurn={isMyTurn}
               currentActionRequired={currentActionRequired}
@@ -619,14 +642,14 @@ export function Board({
             />
           </div>
         )}
-        <div className="w-full flex flex-col gap-1 max-w-[220px] select-none mt-1">
+        <div className="w-full flex flex-col gap-1.5 max-w-[280px] select-none mt-1">
           {gameState.logs.slice(-2).map((log, idx) => (
-            <div key={idx} className="bg-slate-950/70 border border-slate-900/60 px-2 py-0.5 rounded-lg text-[7.5px] font-medium text-slate-400 truncate text-center leading-normal shadow-sm">
+            <div key={idx} className="bg-slate-950/80 border border-slate-900 px-3 py-1 rounded-lg text-[9.5px] font-medium text-slate-350 truncate text-center leading-normal shadow-sm">
               &gt; {log}
             </div>
           ))}
           {gameState.logs.length === 0 && (
-            <div className="text-center text-[7.5px] text-slate-650 font-bold uppercase py-0.5">Trận đấu bắt đầu</div>
+            <div className="text-center text-[9.5px] text-slate-500 font-bold uppercase py-0.5">Trận đấu bắt đầu</div>
           )}
         </div>
       </div>
@@ -634,7 +657,7 @@ export function Board({
       {/* Modal overlay */}
       {gameState.activeModal && isAnimationDone && (
         <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm z-40 rounded-2xl flex flex-col items-center justify-center p-3 pointer-events-auto">
-          <div className="w-full max-w-[260px]">
+          <div className="w-full max-w-[340px]">
             {renderCenterStageModal()}
           </div>
         </div>
