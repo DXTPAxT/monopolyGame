@@ -319,12 +319,100 @@ function AnimatedToken({
   );
 }
 
+// ─── 3D House Model ──────────────────────────────────────────────────────────
+function House3D({ position }: { position: [number, number, number] }) {
+  return (
+    <group position={position}>
+      {/* House Body (Green box) */}
+      <mesh position={[0, 0.05, 0]} castShadow receiveShadow>
+        <boxGeometry args={[0.11, 0.1, 0.11]} />
+        <meshStandardMaterial color="#10b981" roughness={0.3} metalness={0.1} />
+      </mesh>
+      {/* House Roof (pyramid) */}
+      <mesh position={[0, 0.12, 0]} rotation={[0, Math.PI / 4, 0]} castShadow>
+        <coneGeometry args={[0.09, 0.07, 4]} />
+        <meshStandardMaterial color="#047857" roughness={0.4} />
+      </mesh>
+    </group>
+  );
+}
+
+// ─── 3D Hotel Model ──────────────────────────────────────────────────────────
+function Hotel3D({ position }: { position: [number, number, number] }) {
+  return (
+    <group position={position}>
+      {/* Hotel Body (Red box) */}
+      <mesh position={[0, 0.07, 0]} castShadow receiveShadow>
+        <boxGeometry args={[0.22, 0.14, 0.18]} />
+        <meshStandardMaterial color="#ef4444" roughness={0.3} metalness={0.1} />
+      </mesh>
+      {/* Hotel Roof (pyramid) */}
+      <mesh position={[0, 0.17, 0]} rotation={[0, Math.PI / 4, 0]} castShadow>
+        <coneGeometry args={[0.17, 0.08, 4]} />
+        <meshStandardMaterial color="#b91c1c" roughness={0.4} />
+      </mesh>
+    </group>
+  );
+}
+
+// ─── Distribute Houses/Hotels along the Property Color Strip ────────────────
+function TileHouses({
+  tileId, houses, hotel,
+}: {
+  tileId: number; houses: number; hotel: boolean;
+}) {
+  if (!hotel && houses === 0) return null;
+
+  const isBottom = tileId > 0 && tileId < 10;
+  const isLeft = tileId > 10 && tileId < 20;
+  const isTop = tileId > 20 && tileId < 30;
+  const isRight = tileId > 30 && tileId < 40;
+
+  let stripOffset: [number, number] = [0, 0];
+  const offsetDistance = 0.42;
+
+  if (isBottom) stripOffset = [0, -offsetDistance];
+  else if (isTop) stripOffset = [0, offsetDistance];
+  else if (isLeft) stripOffset = [offsetDistance, 0];
+  else if (isRight) stripOffset = [-offsetDistance, 0];
+
+  if (hotel) {
+    return <Hotel3D position={[stripOffset[0], 0.06, stripOffset[1]]} />;
+  }
+
+  const housePositions: [number, number, number][] = [];
+  const isHorizontalSide = isBottom || isTop;
+  const maxSpan = 0.55;
+
+  for (let i = 0; i < houses; i++) {
+    let t = 0;
+    if (houses > 1) {
+      t = (i / (houses - 1)) - 0.5;
+    }
+    const step = t * maxSpan;
+
+    if (isHorizontalSide) {
+      housePositions.push([step, 0.06, stripOffset[1]]);
+    } else {
+      housePositions.push([stripOffset[0], 0.06, step]);
+    }
+  }
+
+  return (
+    <>
+      {housePositions.map((pos, idx) => (
+        <House3D key={idx} position={pos} />
+      ))}
+    </>
+  );
+}
+
 // ─── Component: Single 3D Tile ─────────────────────────────────────────────
 function Tile3D({
-  tile, ownerColor, groupColor, cellColor, isHighlighted,
+  tile, ownerColor, groupColor, cellColor, isHighlighted, houses, hotel,
 }: {
   tile: TileMetadata; ownerColor?: string; groupColor: string;
-  cellColor: string; isHighlighted: boolean;
+  cellColor: string; isHighlighted: boolean; houses: number; hotel: boolean;
 }) {
   const [cx, , cz] = get3DCoordinate(tile.id);
   const { w, l } = getTileDimensions(tile.id);
@@ -355,6 +443,10 @@ function Tile3D({
         <planeGeometry args={[w - 0.02, l - 0.02]} />
         <meshBasicMaterial map={topTexture} />
       </mesh>
+      {/* Houses & Hotels */}
+      {isProperty && (
+        <TileHouses tileId={tile.id} houses={houses} hotel={hotel} />
+      )}
       {/* Highlight glow ring */}
       {isHighlighted && (
         <mesh position={[0, 0.065, 0]}>
@@ -441,7 +533,9 @@ export function GameBoard3D({
 
         {/* ─── 3. Render 40 Tiles ─── */}
         {boardData.map((tile) => {
-          const tileState = gameState.tiles[tile.id];
+          const tileState = Array.isArray(gameState.tiles)
+            ? gameState.tiles.find((t) => t.id === tile.id)
+            : gameState.tiles[tile.id];
           const ownerColor = getOwnerColor(tileState?.ownerId);
           const groupColor = GROUP_COLORS[tile.group] || GROUP_COLORS.special;
 
@@ -453,6 +547,8 @@ export function GameBoard3D({
               groupColor={groupColor}
               cellColor={themeColors.cell}
               isHighlighted={isHighlighted(tile.id)}
+              houses={tileState?.houses || 0}
+              hotel={!!tileState?.hotel}
             />
           );
         })}
