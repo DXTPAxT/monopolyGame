@@ -30,26 +30,26 @@ interface GameBoard3DProps {
   hudContent: React.ReactNode;
 }
 
-// ─── Theme Hex Color Mapping ────────────────────────────────────────────────
+// ─── Theme Colors (BRIGHTER for readability) ────────────────────────────────
 const THEME_HEX: Record<string, { cell: string; frame: string; center: string }> = {
-  neon:    { cell: '#131b2e', frame: '#020617', center: '#0a0f1e' },
-  classic: { cell: '#0a2a1a', frame: '#064e3b', center: '#052e16' },
-  tet:     { cell: '#2a0a0a', frame: '#7f1d1d', center: '#450a0a' },
+  neon:    { cell: '#1e293b', frame: '#0f172a', center: '#0f172a' },
+  classic: { cell: '#134e30', frame: '#064e3b', center: '#052e16' },
+  tet:     { cell: '#3b1010', frame: '#7f1d1d', center: '#450a0a' },
 };
 
-// ─── Group Color Mapping (3D hex values) ────────────────────────────────────
+// ─── Group Color Mapping (vivid, bright for 3D) ─────────────────────────────
 const GROUP_COLORS: Record<string, string> = {
-  brown:      '#92400e',
+  brown:      '#a16207',
   light_blue: '#22d3ee',
-  pink:       '#ec4899',
-  orange:     '#f97316',
-  red:        '#ef4444',
-  yellow:     '#eab308',
-  green:      '#22c55e',
-  dark_blue:  '#2563eb',
-  railroad:   '#475569',
-  utility:    '#14b8a6',
-  special:    '#334155',
+  pink:       '#f472b6',
+  orange:     '#fb923c',
+  red:        '#f87171',
+  yellow:     '#facc15',
+  green:      '#4ade80',
+  dark_blue:  '#3b82f6',
+  railroad:   '#64748b',
+  utility:    '#2dd4bf',
+  special:    '#475569',
 };
 
 // ─── 3D Grid Coordinate Math ────────────────────────────────────────────────
@@ -78,64 +78,80 @@ const getTileDimensions = (id: number): { w: number; l: number } => {
 
 // ─── Offset for multiple players on same tile ──────────────────────────────
 const getTokenOffset = (playerIndex: number, totalPlayers: number): [number, number, number] => {
-  if (totalPlayers <= 1) return [0, 0.04, 0];
+  if (totalPlayers <= 1) return [0, 0.06, 0];
   const offsets: [number, number, number][] = [
-    [-0.22, 0.04, -0.22], [0.22, 0.04, 0.22],
-    [-0.22, 0.04, 0.22],  [0.22, 0.04, -0.22],
-    [0, 0.04, -0.3],      [0, 0.04, 0.3],
+    [-0.22, 0.06, -0.22], [0.22, 0.06, 0.22],
+    [-0.22, 0.06, 0.22],  [0.22, 0.06, -0.22],
+    [0, 0.06, -0.3],      [0, 0.06, 0.3],
   ];
   return offsets[playerIndex % offsets.length];
 };
 
-// ─── CanvasTexture for Tile Label ───────────────────────────────────────────
+// ─── HIGH-RES CanvasTexture for Tile Label ──────────────────────────────────
+// Resolution: 256 px per world unit for sharp text
+const PX_SCALE = 256;
+
 function makeTileTexture(
   tile: TileMetadata,
   w: number,
   h: number,
   groupColor: string,
-  cellColor: string,
+  _cellColor: string,
   ownerColor?: string,
 ): THREE.CanvasTexture {
-  const PX_W = Math.round(w * 128);
-  const PX_H = Math.round(h * 128);
+  const PX_W = Math.round(w * PX_SCALE);
+  const PX_H = Math.round(h * PX_SCALE);
   const c = document.createElement('canvas');
   c.width = PX_W;
   c.height = PX_H;
   const ctx = c.getContext('2d')!;
 
-  // Background
-  ctx.fillStyle = cellColor;
+  const isCorner = tile.id % 10 === 0;
+  const isProperty = tile.type === 'property';
+
+  // ─── Background: Lighter base so text is readable ───
+  // Use a subtle dark-slate base, NOT pitch black
+  ctx.fillStyle = '#1e293b';
   ctx.fillRect(0, 0, PX_W, PX_H);
 
-  // Group color strip (top 16% of tile)
-  const isCorner = tile.id % 10 === 0;
-  if (tile.type === 'property' && !isCorner) {
-    const stripH = Math.round(PX_H * 0.18);
+  // ─── Thin border between tiles ───
+  ctx.strokeStyle = '#334155';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(1, 1, PX_W - 2, PX_H - 2);
+
+  // ─── Group color strip (30% of tile height for properties) ───
+  if (isProperty && !isCorner) {
+    const stripH = Math.round(PX_H * 0.30);
     ctx.fillStyle = groupColor;
     ctx.fillRect(0, 0, PX_W, stripH);
+    // Subtle inner shadow on strip bottom
+    const grad = ctx.createLinearGradient(0, stripH - 8, 0, stripH);
+    grad.addColorStop(0, 'rgba(0,0,0,0)');
+    grad.addColorStop(1, 'rgba(0,0,0,0.3)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, stripH - 8, PX_W, 8);
   }
 
-  // Owner indicator border
+  // ─── Owner indicator (thick bright border) ───
   if (ownerColor) {
     ctx.strokeStyle = ownerColor;
-    ctx.lineWidth = 4;
-    ctx.strokeRect(2, 2, PX_W - 4, PX_H - 4);
+    ctx.lineWidth = 6;
+    ctx.strokeRect(3, 3, PX_W - 6, PX_H - 6);
   }
 
-  // Tile name text
-  const fontSize = isCorner ? 13 : 11;
+  // ─── Tile Name (LARGER font for readability) ───
+  const fontSize = isCorner ? 26 : 22;
   ctx.font = `bold ${fontSize}px "Inter", "Segoe UI", Arial, sans-serif`;
-  ctx.fillStyle = '#e2e8f0';
+  ctx.fillStyle = '#f1f5f9';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
-  const textY = tile.type === 'property' && !isCorner
-    ? PX_H * 0.45
-    : PX_H * 0.35;
+  // Text position: below the color strip for properties, centered otherwise
+  const textStartY = isProperty && !isCorner ? PX_H * 0.52 : PX_H * 0.38;
 
-  // Word wrap for long names
+  // Word wrap
   const words = tile.name.split(' ');
-  const maxW = PX_W - 8;
+  const maxW = PX_W - 16;
   const lines: string[] = [];
   let currentLine = '';
   for (const word of words) {
@@ -149,53 +165,58 @@ function makeTileTexture(
   }
   if (currentLine) lines.push(currentLine);
 
-  const lineHeight = fontSize + 3;
-  const startY = textY - ((lines.length - 1) * lineHeight) / 2;
+  const lineHeight = fontSize + 6;
+  const startY = textStartY - ((lines.length - 1) * lineHeight) / 2;
   for (let i = 0; i < lines.length; i++) {
+    // Text shadow for contrast
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillText(lines[i], PX_W / 2 + 1, startY + i * lineHeight + 1);
+    ctx.fillStyle = '#f1f5f9';
     ctx.fillText(lines[i], PX_W / 2, startY + i * lineHeight);
   }
 
-  // Price text (bottom)
+  // ─── Price (bottom area, bigger) ───
   if (tile.price && tile.type !== 'tax') {
-    ctx.font = `bold 10px "Inter", "Segoe UI", Arial, sans-serif`;
+    ctx.font = `bold 20px "Inter", "Segoe UI", Arial, sans-serif`;
     ctx.fillStyle = '#94a3b8';
-    ctx.fillText(`$${tile.price}`, PX_W / 2, PX_H * 0.82);
+    ctx.fillText(`$${tile.price}`, PX_W / 2, PX_H * 0.85);
   }
 
-  // Special tile icons (text-based)
+  // ─── Special tile icons ───
   if (tile.type === 'go') {
-    ctx.font = 'bold 18px Arial';
-    ctx.fillStyle = '#22c55e';
+    ctx.font = 'bold 36px Arial';
+    ctx.fillStyle = '#4ade80';
     ctx.fillText('→ GO', PX_W / 2, PX_H * 0.7);
   } else if (tile.type === 'tax') {
-    ctx.font = 'bold 10px Arial';
-    ctx.fillStyle = '#f87171';
-    ctx.fillText(`$${tile.price}`, PX_W / 2, PX_H * 0.7);
+    ctx.font = 'bold 22px Arial';
+    ctx.fillStyle = '#fb7185';
+    ctx.fillText(`💰 $${tile.price}`, PX_W / 2, PX_H * 0.72);
   } else if (tile.type === 'chance') {
-    ctx.font = 'bold 16px Arial';
+    ctx.font = 'bold 36px Arial';
     ctx.fillStyle = '#fbbf24';
-    ctx.fillText('?', PX_W / 2, PX_H * 0.65);
+    ctx.fillText('❓', PX_W / 2, PX_H * 0.65);
   } else if (tile.type === 'community_chest') {
-    ctx.font = 'bold 14px Arial';
+    ctx.font = 'bold 30px Arial';
     ctx.fillStyle = '#34d399';
     ctx.fillText('🎁', PX_W / 2, PX_H * 0.65);
   } else if (tile.id === 10) {
-    ctx.font = 'bold 12px Arial';
-    ctx.fillStyle = '#f87171';
-    ctx.fillText('NHÀ TÙ', PX_W / 2, PX_H * 0.65);
+    ctx.font = 'bold 24px Arial';
+    ctx.fillStyle = '#fb7185';
+    ctx.fillText('🔒 NHÀ TÙ', PX_W / 2, PX_H * 0.65);
   } else if (tile.id === 20) {
-    ctx.font = 'bold 10px Arial';
+    ctx.font = 'bold 22px Arial';
     ctx.fillStyle = '#94a3b8';
-    ctx.fillText('NGHỈ CHÂN', PX_W / 2, PX_H * 0.65);
+    ctx.fillText('🅿️ NGHỈ', PX_W / 2, PX_H * 0.65);
   } else if (tile.id === 30) {
-    ctx.font = 'bold 10px Arial';
-    ctx.fillStyle = '#f87171';
-    ctx.fillText('VÀO TÙ!', PX_W / 2, PX_H * 0.65);
+    ctx.font = 'bold 22px Arial';
+    ctx.fillStyle = '#fb7185';
+    ctx.fillText('🚔 VÀO TÙ!', PX_W / 2, PX_H * 0.65);
   }
 
   const tex = new THREE.CanvasTexture(c);
   tex.minFilter = THREE.LinearFilter;
   tex.magFilter = THREE.LinearFilter;
+  tex.anisotropy = 4;
   return tex;
 }
 
@@ -221,7 +242,7 @@ function AnimatedToken({
   });
 
   return (
-    <group ref={ref} position={targetPosition} scale={[1.6, 1.6, 1.6]}>
+    <group ref={ref} position={targetPosition} scale={[1.8, 1.8, 1.8]}>
       <Token3D skinId={skinId} color={color} />
     </group>
   );
@@ -242,29 +263,33 @@ function Tile3D({
     [tile, w, l, groupColor, cellColor, ownerColor],
   );
 
+  // Use group color tint for the body sides to give visual distinction
+  const isProperty = tile.type === 'property' && tile.id % 10 !== 0;
+  const sideColor = isProperty ? groupColor : cellColor;
+
   return (
     <group position={[cx, 0, cz]}>
-      {/* Tile body */}
-      <mesh position={[0, 0.025, 0]} receiveShadow castShadow>
-        <boxGeometry args={[w, 0.05, l]} />
+      {/* Tile body (thicker for more 3D feel) */}
+      <mesh position={[0, 0.03, 0]} receiveShadow castShadow>
+        <boxGeometry args={[w, 0.06, l]} />
         <meshStandardMaterial
-          color={groupColor !== '#334155' ? groupColor : cellColor}
-          roughness={0.5}
-          metalness={0.1}
-          opacity={0.35}
+          color={sideColor}
+          roughness={0.45}
+          metalness={0.05}
+          opacity={isProperty ? 0.6 : 0.4}
           transparent
         />
       </mesh>
       {/* Tile top face with CanvasTexture label */}
-      <mesh position={[0, 0.051, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+      <mesh position={[0, 0.061, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[w - 0.02, l - 0.02]} />
-        <meshBasicMaterial map={topTexture} transparent />
+        <meshBasicMaterial map={topTexture} />
       </mesh>
-      {/* Highlight glow */}
+      {/* Highlight glow ring */}
       {isHighlighted && (
-        <mesh position={[0, 0.06, 0]}>
-          <boxGeometry args={[w + 0.04, 0.005, l + 0.04]} />
-          <meshBasicMaterial color="#818cf8" transparent opacity={0.5} />
+        <mesh position={[0, 0.065, 0]}>
+          <boxGeometry args={[w + 0.06, 0.008, l + 0.06]} />
+          <meshBasicMaterial color="#818cf8" transparent opacity={0.55} />
         </mesh>
       )}
     </group>
@@ -293,16 +318,16 @@ export function GameBoard3D({
     <div className="w-full h-full relative select-none">
       <Canvas
         shadows
-        camera={{ position: [0, 8, 11], fov: 55 }}
+        camera={{ position: [0, 10, 12], fov: 50 }}
         gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
         style={{ width: '100%', height: '100%', outline: 'none' }}
       >
-        {/* ─── Lighting ─── */}
-        <ambientLight intensity={0.8} />
+        {/* ─── BRIGHT Lighting ─── */}
+        <ambientLight intensity={1.2} />
         <directionalLight
           castShadow
-          position={[8, 14, 6]}
-          intensity={1.6}
+          position={[6, 16, 8]}
+          intensity={2.0}
           shadow-mapSize-width={2048}
           shadow-mapSize-height={2048}
           shadow-camera-far={30}
@@ -311,30 +336,33 @@ export function GameBoard3D({
           shadow-camera-top={10}
           shadow-camera-bottom={-10}
         />
-        <pointLight position={[0, 6, 0]} intensity={0.6} color="#818cf8" />
-        <pointLight position={[-6, 3, 6]} intensity={0.3} color="#22d3ee" />
-        <pointLight position={[6, 3, -6]} intensity={0.3} color="#a78bfa" />
+        {/* Fill lights from multiple angles */}
+        <directionalLight position={[-6, 8, -4]} intensity={0.6} />
+        <pointLight position={[0, 8, 0]} intensity={0.8} color="#c4b5fd" />
+        <pointLight position={[-7, 4, 7]} intensity={0.4} color="#22d3ee" />
+        <pointLight position={[7, 4, -7]} intensity={0.4} color="#a78bfa" />
+        <pointLight position={[7, 4, 7]} intensity={0.3} color="#fbbf24" />
 
         {/* ─── Camera Controls ─── */}
         <OrbitControls
           enableDamping
           dampingFactor={0.06}
-          minDistance={5}
-          maxDistance={18}
-          maxPolarAngle={Math.PI / 2.3}
+          minDistance={6}
+          maxDistance={20}
+          maxPolarAngle={Math.PI / 2.5}
           target={[0, 0, 0]}
         />
 
-        {/* ─── 1. Board Base ─── */}
-        <mesh position={[0, -0.03, 0]} receiveShadow>
-          <boxGeometry args={[12.8, 0.06, 12.8]} />
-          <meshStandardMaterial color={themeColors.frame} roughness={0.4} metalness={0.15} />
+        {/* ─── 1. Board Base (frame) ─── */}
+        <mesh position={[0, -0.02, 0]} receiveShadow>
+          <boxGeometry args={[13, 0.04, 13]} />
+          <meshStandardMaterial color={themeColors.frame} roughness={0.35} metalness={0.2} />
         </mesh>
 
-        {/* ─── 2. Center floor ─── */}
-        <mesh position={[0, 0.001, 0]} receiveShadow>
-          <boxGeometry args={[9.54, 0.002, 9.54]} />
-          <meshStandardMaterial color={themeColors.center} roughness={0.6} />
+        {/* ─── 2. Center floor (slightly elevated) ─── */}
+        <mesh position={[0, 0.005, 0]} receiveShadow>
+          <boxGeometry args={[9.6, 0.01, 9.6]} />
+          <meshStandardMaterial color={themeColors.center} roughness={0.5} metalness={0.05} />
         </mesh>
 
         {/* ─── 3. Render 40 Tiles ─── */}
@@ -370,17 +398,17 @@ export function GameBoard3D({
           );
         })}
 
-        {/* ─── 5. Center HUD (Html in 3D space, stuck to board center) ─── */}
+        {/* ─── 5. Center HUD — FLAT on board surface ─── */}
         <Html
           center
           transform
-          position={[0, 0.1, 0]}
-          rotation={[-Math.PI / 4, 0, 0]}
-          distanceFactor={8}
+          position={[0, 0.08, 0]}
+          rotation={[-Math.PI / 2, 0, 0]}
+          scale={0.5}
           pointerEvents="auto"
           style={{ pointerEvents: 'auto' }}
         >
-          <div className="w-[280px] pointer-events-auto">
+          <div className="w-[540px] pointer-events-auto">
             {hudContent}
           </div>
         </Html>
