@@ -297,11 +297,13 @@ function AnimatedToken({
     const time = state.clock.getElapsedTime();
     const isMoving = progress.current < 1;
 
-    // Reset default rotations
+    // Reset default scale and rotations
+    const baseScale = 1.8;
+    ref.current.scale.set(baseScale, baseScale, baseScale);
     ref.current.rotation.set(0, 0, 0);
 
     if (isMoving) {
-      progress.current = Math.min(1, progress.current + delta * 6.0);
+      progress.current = Math.min(1, progress.current + delta * 5.0); // Slightly slower movement for more readable and premium animation
       const t = progress.current;
       const easeT = t * t * (3 - 2 * t); // smoothstep
       
@@ -310,52 +312,155 @@ function AnimatedToken({
       
       const baseHeight = THREE.MathUtils.lerp(animStartPos.current.y, targetPosition.y, easeT);
       
-      // ─── Custom movement animations per skin ───
-      if (skinId === 'rocket') {
-        // Rocket flies: low hop height, smooth glide, tilts forward in direction of flight
-        const hopY = Math.sin(t * Math.PI) * 0.4;
-        ref.current.position.y = baseHeight + hopY;
-        ref.current.rotation.x = -0.35 * Math.sin(t * Math.PI);
-        ref.current.rotation.y = time * 2;
-      }
-      else if (skinId === 'car') {
-        // Car drives: very low suspension bounce, tilts slightly forward/back
-        const hopY = Math.abs(Math.sin(t * Math.PI * 2)) * 0.15;
-        ref.current.position.y = baseHeight + hopY;
-        ref.current.rotation.x = t < 0.5 ? -0.15 : 0.15;
-      }
-      else if (skinId === 'cat') {
-        // Cat jumps: high energetic pounce arc, tilts up then down
-        const hopY = Math.sin(t * Math.PI) * 1.1;
-        ref.current.position.y = baseHeight + hopY;
-        ref.current.rotation.x = THREE.MathUtils.lerp(-0.4, 0.4, t);
-      }
-      else {
-        // Default token: standard parabolic hop
-        const hopY = Math.sin(t * Math.PI) * 0.9;
-        ref.current.position.y = baseHeight + hopY;
-        ref.current.rotation.z = Math.sin(t * Math.PI * 2) * 0.2;
+      switch (skinId) {
+        case 'rocket': {
+          // Rocket Dash: flies flat on ground, pitches down-forward, spins fast
+          const hopY = Math.sin(t * Math.PI) * 0.15;
+          ref.current.position.y = baseHeight + hopY;
+          ref.current.rotation.x = -0.5 * Math.sin(t * Math.PI);
+          ref.current.rotation.y = time * 8;
+          break;
+        }
+        case 'car': {
+          // Speed Roll: runs flat, high vibration suspension, tilts back on accel, pitches forward on brake
+          const hopY = Math.abs(Math.sin(t * Math.PI * 4)) * 0.02;
+          ref.current.position.y = baseHeight + hopY;
+          ref.current.rotation.x = t < 0.35 ? 0.12 : t > 0.65 ? -0.16 : 0;
+          ref.current.rotation.y = Math.sin(t * Math.PI * 2) * 0.15; // drifts left/right
+          break;
+        }
+        case 'motorbike': {
+          // Wheelie Jump: heavy front pitch up on leap, slams down on arrival
+          const hopY = Math.sin(t * Math.PI) * 0.25;
+          ref.current.position.y = baseHeight + hopY;
+          ref.current.rotation.x = t < 0.55 ? 0.35 : -0.15;
+          ref.current.rotation.z = Math.sin(t * Math.PI) * 0.12; // lean side to side
+          break;
+        }
+        case 'dragon': {
+          // Serpentine Fly: double wave height fluctuation, rolls side to side and sways head
+          const hopY = Math.sin(t * Math.PI) * 0.7 + Math.sin(t * Math.PI * 3) * 0.25;
+          ref.current.position.y = baseHeight + hopY;
+          ref.current.rotation.y = Math.sin(t * Math.PI * 2) * 0.45; // head sway
+          ref.current.rotation.z = Math.cos(t * Math.PI * 2) * 0.25; // roll bank
+          break;
+        }
+        case 'tiger': {
+          // Tiger Pounce: massive pounce arc, pitches up on take-off, down on land
+          const hopY = Math.sin(t * Math.PI) * 1.25;
+          ref.current.position.y = baseHeight + hopY;
+          ref.current.rotation.x = THREE.MathUtils.lerp(-0.45, 0.55, t);
+          ref.current.rotation.z = Math.sin(t * Math.PI * 2) * 0.15; // tail sway
+          break;
+        }
+        case 'hat': {
+          // Wind Drift: flies high, spins rapidly, drifts like falling leaf
+          const hopY = Math.sin(t * Math.PI) * 0.85;
+          ref.current.position.y = baseHeight + hopY;
+          ref.current.rotation.y = t * Math.PI * 4; // spin
+          ref.current.rotation.z = Math.sin(t * Math.PI * 3) * 0.3; // leaf wobble
+          ref.current.rotation.x = Math.cos(t * Math.PI * 3) * 0.2;
+          break;
+        }
+        case 'pho': {
+          // Jelly Wobble: standard hop, stretch Y when jumping, squash Y when landing
+          const hopY = Math.sin(t * Math.PI) * 0.7;
+          ref.current.position.y = baseHeight + hopY;
+          const scaleY = t < 0.55 
+            ? THREE.MathUtils.lerp(1.0, 1.35, t * 2) 
+            : THREE.MathUtils.lerp(1.35, 0.75, (t - 0.55) * 2);
+          const scaleXZ = t < 0.55
+            ? THREE.MathUtils.lerp(1.0, 0.8, t * 2)
+            : THREE.MathUtils.lerp(0.8, 1.2, (t - 0.55) * 2);
+          ref.current.scale.set(baseScale * scaleXZ, baseScale * scaleY, baseScale * scaleXZ);
+          ref.current.rotation.z = Math.sin(t * Math.PI * 2) * 0.2;
+          break;
+        }
+        case 'coconut': {
+          // Trundling Roll: double bounce along ground, rolls continuously on X and wiggles Z
+          const hopY = Math.abs(Math.sin(t * Math.PI * 2)) * 0.45;
+          ref.current.position.y = baseHeight + hopY;
+          ref.current.rotation.x = t * Math.PI * 4; // heavy roll
+          ref.current.rotation.z = Math.sin(t * Math.PI) * 0.35; // wobble roll
+          break;
+        }
+        default: {
+          // Classic Pawn Hop: springy parabolic hop, stretches & squashes
+          const hopY = Math.sin(t * Math.PI) * 0.9;
+          ref.current.position.y = baseHeight + hopY;
+          const scaleY = 1.0 + Math.sin(t * Math.PI) * 0.2 - (t > 0.8 ? (1.0 - t) * 0.8 : 0);
+          ref.current.scale.set(baseScale / Math.sqrt(scaleY), baseScale * scaleY, baseScale / Math.sqrt(scaleY));
+          ref.current.rotation.z = Math.sin(t * Math.PI * 2) * 0.2;
+          break;
+        }
       }
     } else {
       ref.current.position.lerp(targetPosition, Math.min(1, delta * 15));
       
       // ─── Idle animations ───
-      if (skinId === 'rocket') {
-        // Rocket bobbing up and down gently (hovering) and spinning slowly
-        ref.current.position.y = targetPosition.y + Math.sin(time * 2.5) * 0.05;
-        ref.current.rotation.y = time * 0.5;
-      }
-      else if (skinId === 'cat') {
-        // Cat wiggles ears or looks left/right occasionally
-        ref.current.rotation.y = Math.sin(time * 1.2) * 0.15;
-      }
-      else if (skinId === 'car') {
-        // Car vibrates slightly (engine idling)
-        ref.current.position.y = targetPosition.y + Math.sin(time * 30) * 0.005;
-      }
-      else {
-        // Default bob
-        ref.current.position.y = targetPosition.y + Math.sin(time * 1.5) * 0.015;
+      switch (skinId) {
+        case 'rocket': {
+          // Hovering: bobs Y, slow yaw, tiny drone-stabilizer tilt
+          ref.current.position.y = targetPosition.y + Math.sin(time * 3.0) * 0.06;
+          ref.current.rotation.y = time * 0.5;
+          ref.current.rotation.x = Math.sin(time * 1.5) * 0.04;
+          ref.current.rotation.z = Math.cos(time * 1.5) * 0.04;
+          break;
+        }
+        case 'car': {
+          // Engine Idle: high speed vibration, slow back-and-forth tilt
+          ref.current.position.y = targetPosition.y + Math.sin(time * 45.0) * 0.003;
+          ref.current.rotation.z = Math.sin(time * 1.5) * 0.012;
+          break;
+        }
+        case 'motorbike': {
+          // Engine Revving: high speed vibrate, occasional front-wheel tilt (wheelie tease)
+          ref.current.position.y = targetPosition.y + Math.sin(time * 40.0) * 0.0035;
+          const tease = Math.max(0, Math.sin(time * 2.5) - 0.7) * 0.2;
+          ref.current.rotation.x = tease;
+          break;
+        }
+        case 'dragon': {
+          // Majestic Float: graceful bobbing Y, tail sway, pitch sway
+          ref.current.position.y = targetPosition.y + Math.sin(time * 1.5) * 0.08;
+          ref.current.rotation.y = Math.sin(time * 1.0) * 0.18;
+          ref.current.rotation.x = Math.sin(time * 0.8) * 0.06;
+          break;
+        }
+        case 'tiger': {
+          // Alert Stalk: breathing bob, alert left-right gaze, playful tail shake
+          ref.current.position.y = targetPosition.y + Math.sin(time * 2.0) * 0.015;
+          ref.current.rotation.y = Math.sin(time * 1.0) * 0.28;
+          if (time % 5.0 < 1.5) {
+            ref.current.rotation.z = Math.sin(time * 15.0) * 0.06; // tail shake
+          }
+          break;
+        }
+        case 'hat': {
+          // Gentle Breeze: slow Y bob, sway/tilt in breeze
+          ref.current.position.y = targetPosition.y + Math.sin(time * 1.2) * 0.015;
+          ref.current.rotation.z = Math.sin(time * 1.2) * 0.08;
+          ref.current.rotation.x = Math.cos(time * 1.0) * 0.06;
+          break;
+        }
+        case 'pho': {
+          // Steaming Soup: soft warm vibration, soft yaw/roll sway
+          ref.current.position.y = targetPosition.y + Math.sin(time * 2.2) * 0.006;
+          ref.current.rotation.z = Math.sin(time * 1.8) * 0.04;
+          ref.current.rotation.y = Math.cos(time * 1.8) * 0.04;
+          break;
+        }
+        case 'coconut': {
+          // Resting Roll: slight settling wobble
+          ref.current.rotation.z = Math.sin(time * 1.0) * 0.035;
+          ref.current.rotation.x = Math.cos(time * 1.2) * 0.035;
+          break;
+        }
+        default: {
+          // Steady Pawn: default breathing bob
+          ref.current.position.y = targetPosition.y + Math.sin(time * 1.6) * 0.01;
+          break;
+        }
       }
     }
   });
