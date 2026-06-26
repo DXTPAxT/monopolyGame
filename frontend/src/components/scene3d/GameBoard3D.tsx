@@ -257,7 +257,7 @@ function makeTileTexture(
   return tex;
 }
 
-// ─── Component: Moving Token with Hop Animation ────────────────────────────
+// ─── Component: Moving Token with Custom Hop Animation per Skin ─────────────
 function AnimatedToken({
   skinId, color, currentTileId, playerIndex, totalPlayers,
 }: {
@@ -284,19 +284,24 @@ function AnimatedToken({
       }
       
       const diff = Math.abs(currentTileId - lastTileId.current);
-      const isTeleport = diff > 1 && diff < 39; // 39 is wrap around 0
+      const isTeleport = diff > 1 && diff < 39;
       
       lastTileId.current = currentTileId;
-      progress.current = isTeleport ? 0.8 : 0; // Teleports snap quickly
+      progress.current = isTeleport ? 0.8 : 0;
     }
   }, [currentTileId, targetPosition]);
 
-  useFrame((_s, delta) => {
+  useFrame((state, delta) => {
     if (!ref.current) return;
-    if (progress.current < 1) {
-      // Step duration is 200ms in Board.tsx. Complete animation in ~170ms.
+    
+    const time = state.clock.getElapsedTime();
+    const isMoving = progress.current < 1;
+
+    // Reset default rotations
+    ref.current.rotation.set(0, 0, 0);
+
+    if (isMoving) {
       progress.current = Math.min(1, progress.current + delta * 6.0);
-      
       const t = progress.current;
       const easeT = t * t * (3 - 2 * t); // smoothstep
       
@@ -304,11 +309,54 @@ function AnimatedToken({
       ref.current.position.z = THREE.MathUtils.lerp(animStartPos.current.z, targetPosition.z, easeT);
       
       const baseHeight = THREE.MathUtils.lerp(animStartPos.current.y, targetPosition.y, easeT);
-      // Beautiful parabolic jump height: sin(t * pi) * hopHeight
-      const hopY = Math.sin(t * Math.PI) * 0.9;
-      ref.current.position.y = baseHeight + hopY;
+      
+      // ─── Custom movement animations per skin ───
+      if (skinId === 'rocket') {
+        // Rocket flies: low hop height, smooth glide, tilts forward in direction of flight
+        const hopY = Math.sin(t * Math.PI) * 0.4;
+        ref.current.position.y = baseHeight + hopY;
+        ref.current.rotation.x = -0.35 * Math.sin(t * Math.PI);
+        ref.current.rotation.y = time * 2;
+      }
+      else if (skinId === 'car') {
+        // Car drives: very low suspension bounce, tilts slightly forward/back
+        const hopY = Math.abs(Math.sin(t * Math.PI * 2)) * 0.15;
+        ref.current.position.y = baseHeight + hopY;
+        ref.current.rotation.x = t < 0.5 ? -0.15 : 0.15;
+      }
+      else if (skinId === 'cat') {
+        // Cat jumps: high energetic pounce arc, tilts up then down
+        const hopY = Math.sin(t * Math.PI) * 1.1;
+        ref.current.position.y = baseHeight + hopY;
+        ref.current.rotation.x = THREE.MathUtils.lerp(-0.4, 0.4, t);
+      }
+      else {
+        // Default token: standard parabolic hop
+        const hopY = Math.sin(t * Math.PI) * 0.9;
+        ref.current.position.y = baseHeight + hopY;
+        ref.current.rotation.z = Math.sin(t * Math.PI * 2) * 0.2;
+      }
     } else {
       ref.current.position.lerp(targetPosition, Math.min(1, delta * 15));
+      
+      // ─── Idle animations ───
+      if (skinId === 'rocket') {
+        // Rocket bobbing up and down gently (hovering) and spinning slowly
+        ref.current.position.y = targetPosition.y + Math.sin(time * 2.5) * 0.05;
+        ref.current.rotation.y = time * 0.5;
+      }
+      else if (skinId === 'cat') {
+        // Cat wiggles ears or looks left/right occasionally
+        ref.current.rotation.y = Math.sin(time * 1.2) * 0.15;
+      }
+      else if (skinId === 'car') {
+        // Car vibrates slightly (engine idling)
+        ref.current.position.y = targetPosition.y + Math.sin(time * 30) * 0.005;
+      }
+      else {
+        // Default bob
+        ref.current.position.y = targetPosition.y + Math.sin(time * 1.5) * 0.015;
+      }
     }
   });
 
@@ -319,37 +367,49 @@ function AnimatedToken({
   );
 }
 
-// ─── 3D House Model ──────────────────────────────────────────────────────────
-function House3D({ position }: { position: [number, number, number] }) {
+// ─── 3D House Model (Matches Owner Color) ──────────────────────────────────
+function House3D({ position, ownerColor }: { position: [number, number, number]; ownerColor?: string }) {
+  const roofColor = useMemo(() => {
+    const c = new THREE.Color(ownerColor || '#10b981');
+    c.multiplyScalar(0.7); // Darken by 30% for contrast
+    return c;
+  }, [ownerColor]);
+
   return (
     <group position={position}>
-      {/* House Body (Green box) */}
+      {/* House Body (Player color) */}
       <mesh position={[0, 0.05, 0]} castShadow receiveShadow>
         <boxGeometry args={[0.11, 0.1, 0.11]} />
-        <meshStandardMaterial color="#10b981" roughness={0.3} metalness={0.1} />
+        <meshStandardMaterial color={ownerColor || '#10b981'} roughness={0.3} metalness={0.1} />
       </mesh>
-      {/* House Roof (pyramid) */}
+      {/* House Roof (Darker player color) */}
       <mesh position={[0, 0.12, 0]} rotation={[0, Math.PI / 4, 0]} castShadow>
         <coneGeometry args={[0.09, 0.07, 4]} />
-        <meshStandardMaterial color="#047857" roughness={0.4} />
+        <meshStandardMaterial color={roofColor} roughness={0.4} />
       </mesh>
     </group>
   );
 }
 
-// ─── 3D Hotel Model ──────────────────────────────────────────────────────────
-function Hotel3D({ position }: { position: [number, number, number] }) {
+// ─── 3D Hotel Model (Matches Owner Color) ──────────────────────────────────
+function Hotel3D({ position, ownerColor }: { position: [number, number, number]; ownerColor?: string }) {
+  const roofColor = useMemo(() => {
+    const c = new THREE.Color(ownerColor || '#ef4444');
+    c.multiplyScalar(0.6); // Darken by 40% for contrast
+    return c;
+  }, [ownerColor]);
+
   return (
     <group position={position}>
-      {/* Hotel Body (Red box) */}
+      {/* Hotel Body (Player color) */}
       <mesh position={[0, 0.07, 0]} castShadow receiveShadow>
         <boxGeometry args={[0.22, 0.14, 0.18]} />
-        <meshStandardMaterial color="#ef4444" roughness={0.3} metalness={0.1} />
+        <meshStandardMaterial color={ownerColor || '#ef4444'} roughness={0.3} metalness={0.1} />
       </mesh>
       {/* Hotel Roof (pyramid) */}
       <mesh position={[0, 0.17, 0]} rotation={[0, Math.PI / 4, 0]} castShadow>
         <coneGeometry args={[0.17, 0.08, 4]} />
-        <meshStandardMaterial color="#b91c1c" roughness={0.4} />
+        <meshStandardMaterial color={roofColor} roughness={0.4} />
       </mesh>
     </group>
   );
@@ -357,9 +417,9 @@ function Hotel3D({ position }: { position: [number, number, number] }) {
 
 // ─── Distribute Houses/Hotels along the Property Color Strip ────────────────
 function TileHouses({
-  tileId, houses, hotel,
+  tileId, houses, hotel, ownerColor,
 }: {
-  tileId: number; houses: number; hotel: boolean;
+  tileId: number; houses: number; hotel: boolean; ownerColor?: string;
 }) {
   if (!hotel && houses === 0) return null;
 
@@ -377,7 +437,7 @@ function TileHouses({
   else if (isRight) stripOffset = [-offsetDistance, 0];
 
   if (hotel) {
-    return <Hotel3D position={[stripOffset[0], 0.06, stripOffset[1]]} />;
+    return <Hotel3D position={[stripOffset[0], 0.06, stripOffset[1]]} ownerColor={ownerColor} />;
   }
 
   const housePositions: [number, number, number][] = [];
@@ -401,7 +461,7 @@ function TileHouses({
   return (
     <>
       {housePositions.map((pos, idx) => (
-        <House3D key={idx} position={pos} />
+        <House3D key={idx} position={pos} ownerColor={ownerColor} />
       ))}
     </>
   );
@@ -445,7 +505,7 @@ function Tile3D({
       </mesh>
       {/* Houses & Hotels */}
       {isProperty && (
-        <TileHouses tileId={tile.id} houses={houses} hotel={hotel} />
+        <TileHouses tileId={tile.id} houses={houses} hotel={hotel} ownerColor={ownerColor} />
       )}
       {/* Highlight glow ring */}
       {isHighlighted && (
@@ -598,7 +658,7 @@ export function GameBoard3D({
           pointerEvents="auto"
           style={{ pointerEvents: 'auto' }}
         >
-          <div className="w-[540px] pointer-events-auto">
+          <div className="w-[340px] pointer-events-auto">
             {hudContent}
           </div>
         </Html>

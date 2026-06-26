@@ -22,6 +22,8 @@ export function registerRoll(state: GameState): { goToJailForDoubles: boolean } 
       state.doublesCount = 0;
       return { goToJailForDoubles: true };
     }
+  } else {
+    state.doublesCount = 0;
   }
 
   return { goToJailForDoubles: false };
