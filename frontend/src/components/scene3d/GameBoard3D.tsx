@@ -156,9 +156,9 @@ function makeTileTexture(
   ctx.lineWidth = 3;
   ctx.strokeRect(1, 1, PX_W - 2, PX_H - 2);
 
-  // ─── Group color strip (30% of tile height for properties) ───
+  // ─── Group color strip (22% of tile height for properties to give text more space) ───
   if (isProperty && !isCorner) {
-    const stripH = Math.round(PX_H * 0.30);
+    const stripH = Math.round(PX_H * 0.22);
     ctx.fillStyle = groupColor;
     ctx.fillRect(0, 0, PX_W, stripH);
     // Subtle inner shadow on strip bottom
@@ -176,15 +176,15 @@ function makeTileTexture(
     ctx.strokeRect(4, 4, PX_W - 8, PX_H - 8);
   }
 
-  // ─── Tile Name (SIGNIFICANTLY LARGER font for readability) ───
-  const fontSize = isCorner ? 36 : 30;
+  // ─── Tile Name (DOUBLE font sizes for readability) ───
+  const fontSize = isCorner ? 68 : 56;
   ctx.font = `bold ${fontSize}px "Inter", "Segoe UI", Arial, sans-serif`;
   ctx.fillStyle = '#f1f5f9';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
   // Text position: below the color strip for properties, centered otherwise
-  const textStartY = isProperty && !isCorner ? PX_H * 0.55 : PX_H * 0.40;
+  const textStartY = isProperty && !isCorner ? PX_H * 0.52 : PX_H * 0.42;
 
   // Word wrap
   const words = tile.name.split(' ');
@@ -202,50 +202,50 @@ function makeTileTexture(
   }
   if (currentLine) lines.push(currentLine);
 
-  const lineHeight = fontSize + 6;
+  const lineHeight = fontSize + 8;
   const startY = textStartY - ((lines.length - 1) * lineHeight) / 2;
   for (let i = 0; i < lines.length; i++) {
     // Text shadow for contrast
-    ctx.fillStyle = 'rgba(0,0,0,0.5)';
-    ctx.fillText(lines[i], PX_W / 2 + 1.5, startY + i * lineHeight + 1.5);
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.fillText(lines[i], PX_W / 2 + 2, startY + i * lineHeight + 2);
     ctx.fillStyle = '#f1f5f9';
     ctx.fillText(lines[i], PX_W / 2, startY + i * lineHeight);
   }
 
   // ─── Price (bottom area, bigger) ───
   if (tile.price && tile.type !== 'tax') {
-    ctx.font = `bold 26px "Inter", "Segoe UI", Arial, sans-serif`;
+    ctx.font = `bold 42px "Inter", "Segoe UI", Arial, sans-serif`;
     ctx.fillStyle = '#94a3b8';
-    ctx.fillText(`$${tile.price}`, PX_W / 2, PX_H * 0.84);
+    ctx.fillText(`$${tile.price}`, PX_W / 2, PX_H * 0.86);
   }
 
   // ─── Special tile icons ───
   if (tile.type === 'go') {
-    ctx.font = 'bold 52px Arial';
+    ctx.font = 'bold 92px Arial';
     ctx.fillStyle = '#4ade80';
     ctx.fillText('→ GO', PX_W / 2, PX_H * 0.75);
   } else if (tile.type === 'tax') {
-    ctx.font = 'bold 32px Arial';
+    ctx.font = 'bold 56px Arial';
     ctx.fillStyle = '#fb7185';
     ctx.fillText(`💰 $${tile.price}`, PX_W / 2, PX_H * 0.75);
   } else if (tile.type === 'chance') {
-    ctx.font = 'bold 54px Arial';
+    ctx.font = 'bold 96px Arial';
     ctx.fillStyle = '#fbbf24';
     ctx.fillText('❓', PX_W / 2, PX_H * 0.72);
   } else if (tile.type === 'community_chest') {
-    ctx.font = 'bold 48px Arial';
+    ctx.font = 'bold 86px Arial';
     ctx.fillStyle = '#34d399';
     ctx.fillText('🎁', PX_W / 2, PX_H * 0.72);
   } else if (tile.id === 10) {
-    ctx.font = 'bold 32px Arial';
+    ctx.font = 'bold 56px Arial';
     ctx.fillStyle = '#fb7185';
     ctx.fillText('🔒 NHÀ TÙ', PX_W / 2, PX_H * 0.72);
   } else if (tile.id === 20) {
-    ctx.font = 'bold 32px Arial';
+    ctx.font = 'bold 56px Arial';
     ctx.fillStyle = '#94a3b8';
     ctx.fillText('🅿️ NGHỈ', PX_W / 2, PX_H * 0.72);
   } else if (tile.id === 30) {
-    ctx.font = 'bold 32px Arial';
+    ctx.font = 'bold 56px Arial';
     ctx.fillStyle = '#fb7185';
     ctx.fillText('🚔 VÀO TÙ!', PX_W / 2, PX_H * 0.72);
   }
