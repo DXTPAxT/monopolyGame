@@ -491,6 +491,18 @@ export function leaveJail(state: GameState, method: 'pay' | 'use_card'): { state
 /** Sau khi đã bán/cầm cố đủ tiền, thanh toán khoản nợ đang treo (must_raise_funds). */
 export function settleRaisedFunds(state: GameState): { state: GameState; event: string } {
   const res = settleDebtModule(state);
+
+  // Vẫn chưa đủ tiền mặt → KHÔNG đóng modal/đổi trạng thái. Giữ nguyên must_raise_funds
+  // (hoặc bankruptcy_decision) để người chơi tiếp tục bán nhà / cầm cố rồi bấm lại.
+  if (!res.ok && !res.gameOver) {
+    const payment = state.pendingPayment;
+    const have = state.players.find((p) => p.id === payment?.fromPlayerId)?.money ?? 0;
+    const need = payment?.amount ?? 0;
+    const msg = `Chưa đủ tiền mặt để trả nợ! Cần $${need.toLocaleString()}, đang có $${have.toLocaleString()}. Hãy bán nhà / cầm cố thêm rồi bấm thanh toán lại.`;
+    state.logs.push(msg);
+    return { state, event: msg };
+  }
+
   res.events.forEach((e) => state.logs.push(e));
   if (res.gameOver && res.winnerId) {
     const w = state.players.find((p) => p.id === res.winnerId);

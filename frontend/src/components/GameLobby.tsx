@@ -96,8 +96,8 @@ export function GameLobby({
   // Màn hình nhập tên & mã phòng (Chưa vào phòng)
   if (!roomCode) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900 via-slate-950 to-black p-4">
-        <div className="w-full max-w-md bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 shadow-2xl">
+      <div className="min-h-screen flex justify-center bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900 via-slate-950 to-black p-4">
+        <div className="my-auto w-full max-w-md bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 shadow-2xl">
           <div className="text-center mb-8">
             <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-cyan-400 via-indigo-400 to-purple-500 bg-clip-text text-transparent uppercase animate-pulse">
               Cờ Tỷ Phú Online
@@ -165,8 +165,8 @@ export function GameLobby({
 
   // Màn hình phòng chờ (Đã vào phòng)
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900 via-slate-950 to-black p-4">
-      <div className="w-full max-w-4xl grid md:grid-cols-2 gap-6 bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 shadow-2xl">
+    <div className="min-h-screen flex justify-center bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900 via-slate-950 to-black p-4">
+      <div className="my-auto w-full max-w-4xl grid md:grid-cols-2 gap-6 bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 shadow-2xl">
         
         {/* Cột trái: Người chơi & Mã phòng */}
         <div className="flex flex-col justify-between p-2">

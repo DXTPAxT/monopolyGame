@@ -15,9 +15,11 @@ describe('gameEngine facade integration', () => {
   it('initializeGame produces a valid fresh state', () => {
     const s = initializeGame('ROOM', [basePlayer('p1'), basePlayer('p2')]);
     expect(s.players).toHaveLength(2);
-    expect(s.players[0].money).toBe(1500);
+    // Tiền khởi điểm mặc định (DEFAULT_ROOM_SETTINGS) là $2000 — initializeGame ghi đè
+    // money của mọi người chơi bằng settings.startingMoney, không dùng money truyền vào.
+    expect(s.players[0].money).toBe(2000);
     expect(s.tiles).toHaveLength(40);
-    expect(s.settings.startingMoney).toBe(1500);
+    expect(s.settings.startingMoney).toBe(2000);
     expect(s.freeParkingPot).toBe(0);
     expect(s.activePlayerIndex).toBe(0);
   });
@@ -28,7 +30,8 @@ describe('gameEngine facade integration', () => {
     s.currentActionRequired = 'buy_or_pass';
     const { state } = buyProperty(s);
     expect(state.tiles.find((t) => t.id === 1)!.ownerId).toBe('p1');
-    expect(state.players[0].money).toBe(1440);
+    // 2000 (mặc định) − 60 (giá Hồ Cốc) = 1940
+    expect(state.players[0].money).toBe(1940);
     expect(state.currentActionRequired).toBe('none');
   });
 

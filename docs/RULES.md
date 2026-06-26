@@ -14,7 +14,7 @@
   1. Sở hữu trọn vẹn **3 nhóm màu** bất kỳ.
   2. Sở hữu trọn **1 cạnh bàn cờ** — tức tất cả ô **đất xây nhà được** trên 1 trong 4 cạnh (KHÔNG tính nhà ga & tiện ích).
   3. Sở hữu cả **4 nhà ga**.
-- **Tiền khởi điểm:** $1500 mỗi người.
+- **Tiền khởi điểm:** $2000 mỗi người (mặc định; có thể tùy chỉnh trong sảnh — chế độ nhanh mặc định $1000).
 - **Bàn cờ:** 40 ô, đánh số 0–39, đi theo chiều kim đồng hồ.
 - **Ngân hàng:** Không bao giờ "phá sản". Trả lương GO, tiền thưởng thẻ, nhận thuế/phạt, bán/cầm cố tài sản. Quản lý kho **32 nhà** và **12 khách sạn** (giới hạn vật lý — xem §7.4).
 

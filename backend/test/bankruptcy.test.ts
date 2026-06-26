@@ -341,7 +341,10 @@ describe('settleDebt', () => {
     expect(state.pendingPayment).toBeNull();
   });
 
-  it('triggers bankruptcy if player still cannot pay after attempting to raise funds', () => {
+  it('does NOT auto-bankrupt when cash is still short; keeps debt pending so the player can sell more', () => {
+    // Repro của bug: người chơi bấm "Thanh toán nợ" khi chưa bán đủ nhà.
+    // Trước đây settleDebt ép phá sản ngay → mất cơ hội bán nhà. Hành vi đúng:
+    // giữ nguyên must_raise_funds, KHÔNG phá sản (chỉ phá sản khi chủ động bấm).
     const player = makePlayer({ id: 'p1', money: 50 });
     const creditor = makePlayer({ id: 'p2', money: 100, name: 'Player 2', color: 'blue' });
     const pendingPayment: PendingPayment = {
@@ -356,6 +359,12 @@ describe('settleDebt', () => {
     const result = settleDebt(state);
 
     expect(result.ok).toBe(false);
-    expect(state.players.find(p => p.id === 'p1')!.isBankrupt).toBe(true);
+    expect(result.gameOver).toBe(false);
+    // KHÔNG phá sản — người chơi giữ nguyên tài sản và tiền
+    expect(state.players.find(p => p.id === 'p1')!.isBankrupt).toBe(false);
+    expect(state.players.find(p => p.id === 'p1')!.money).toBe(50);
+    // Nợ vẫn treo, vẫn ở trạng thái phải gom tiền
+    expect(state.pendingPayment).not.toBeNull();
+    expect(state.currentActionRequired).toBe('must_raise_funds');
   });
 });

@@ -152,8 +152,15 @@ export function settleDebt(state: GameState): BankruptcyResult {
     };
   }
 
-  // Still can't pay → bankruptcy
-  return declareBankruptcy(state);
+  // Still can't pay → KHÔNG tự tuyên bố phá sản. Giữ nguyên khoản nợ treo để người chơi
+  // tiếp tục bán nhà / cầm cố đất rồi thử lại. Phá sản chỉ xảy ra khi người chơi CHỦ ĐỘNG
+  // bấm "Tuyên bố phá sản" (declareBankruptcy). Điều này tránh việc bấm "Thanh toán nợ"
+  // khi chưa bán đủ nhà lại bị mất trắng ngay lập tức.
+  return {
+    ok: false,
+    events: [`insufficient_funds:player=${payer.id}:need=${payment.amount}:have=${payer.money}`],
+    gameOver: false,
+  };
 }
 
 // ─────────────────────────────────────────────────────────────
