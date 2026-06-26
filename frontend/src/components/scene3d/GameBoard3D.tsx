@@ -314,11 +314,34 @@ function AnimatedToken({
       
       switch (skinId) {
         case 'rocket': {
-          // Rocket Dash: flies flat on ground, pitches down-forward, spins fast
-          const hopY = Math.sin(t * Math.PI) * 0.15;
-          ref.current.position.y = baseHeight + hopY;
-          ref.current.rotation.x = -0.5 * Math.sin(t * Math.PI);
-          ref.current.rotation.y = time * 8;
+          // Sub-orbital Flight Path:
+          // 1. Takeoff (t < 0.3): launches vertically up to +1.8 height
+          // 2. Cruise (0.3 <= t <= 0.7): glides horizontally to destination and tilts forward
+          // 3. Landing (t > 0.7): descends vertically down to destination
+          if (t < 0.3) {
+            const launchT = t / 0.3;
+            ref.current.position.x = animStartPos.current.x;
+            ref.current.position.z = animStartPos.current.z;
+            ref.current.position.y = animStartPos.current.y + launchT * 1.8;
+            ref.current.rotation.x = 0; // vertical
+            ref.current.rotation.y = time * 15; // spin thrusters
+          } else if (t <= 0.7) {
+            const cruiseT = (t - 0.3) / 0.4;
+            const easeCruise = cruiseT * cruiseT * (3 - 2 * cruiseT);
+            ref.current.position.x = THREE.MathUtils.lerp(animStartPos.current.x, targetPosition.x, easeCruise);
+            ref.current.position.z = THREE.MathUtils.lerp(animStartPos.current.z, targetPosition.z, easeCruise);
+            const cruiseBaseY = THREE.MathUtils.lerp(animStartPos.current.y, targetPosition.y, easeCruise);
+            ref.current.position.y = cruiseBaseY + 1.8 + Math.sin(cruiseT * Math.PI) * 0.25;
+            ref.current.rotation.x = -0.75; // tilt forward in flight direction
+            ref.current.rotation.y = time * 6;
+          } else {
+            const landT = (t - 0.7) / 0.3;
+            ref.current.position.x = targetPosition.x;
+            ref.current.position.z = targetPosition.z;
+            ref.current.position.y = targetPosition.y + (1.0 - landT) * 1.8;
+            ref.current.rotation.x = 0; // vertical landing
+            ref.current.rotation.y = time * 15;
+          }
           break;
         }
         case 'car': {

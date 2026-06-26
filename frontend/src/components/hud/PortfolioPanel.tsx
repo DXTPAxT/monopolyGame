@@ -13,6 +13,7 @@ interface PortfolioPanelProps {
   mortgageTile: (tileId: number) => void;
   unmortgageTile: (tileId: number) => void;
   sellDeed: (tileId: number) => void;
+  visualMoney?: number;
 }
 
 const GROUP_DOT: Record<string, string> = {
@@ -22,7 +23,7 @@ const GROUP_DOT: Record<string, string> = {
 };
 
 export function PortfolioPanel({
-  gameState, playerId, isMyTurn, sellHouse, mortgageTile, unmortgageTile, sellDeed,
+  gameState, playerId, isMyTurn, sellHouse, mortgageTile, unmortgageTile, sellDeed, visualMoney,
 }: PortfolioPanelProps) {
   const [open, setOpen] = useState(true);
   const me = gameState.players.find((p) => p.id === playerId);
@@ -32,6 +33,9 @@ export function PortfolioPanel({
 
   const props = myProperties(gameState, playerId);
   const worth = netWorth(gameState, playerId);
+
+  const displayMoney = visualMoney !== undefined ? visualMoney : me.money;
+  const displayWorth = worth - me.money + displayMoney;
 
   return (
     <div className="bg-slate-900/30 border border-slate-800 rounded-2xl p-3 flex flex-col gap-2 shadow-lg">
@@ -51,11 +55,11 @@ export function PortfolioPanel({
       <div className="grid grid-cols-2 gap-2">
         <div className="bg-slate-950/50 border border-slate-800 rounded-xl px-3 py-2">
           <div className="text-[11px] text-slate-500 font-semibold uppercase tracking-wide">Tiền mặt</div>
-          <div className="text-base font-black text-amber-400 font-mono">{formatMoney(me.money)}</div>
+          <div className="text-base font-black text-amber-400 font-mono">{formatMoney(displayMoney)}</div>
         </div>
         <div className="bg-slate-950/50 border border-slate-800 rounded-xl px-3 py-2">
           <div className="text-[11px] text-slate-500 font-semibold uppercase tracking-wide">Tổng tài sản</div>
-          <div className="text-base font-black text-emerald-400 font-mono">{formatMoney(worth)}</div>
+          <div className="text-base font-black text-emerald-400 font-mono">{formatMoney(displayWorth)}</div>
         </div>
       </div>
 

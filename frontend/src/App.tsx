@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSocket } from './hooks/useSocket';
+import type { Player } from './types/game';
 import { GameLobby } from './components/GameLobby';
 import { Board } from './components/Board';
 import { PlayerList } from './components/PlayerList';
@@ -50,6 +51,32 @@ export default function App() {
   const [muted, setMuted] = useState(isSoundMuted());
   const toggleMute = () => { const v = !muted; setSoundMuted(v); setMuted(v); };
   const boardThemeBg = getBoardTheme(gameState?.settings?.boardSkin).appBg;
+
+  const [isAnimDone, setIsAnimDone] = useState(true);
+  const [visualPlayers, setVisualPlayers] = useState<Player[]>([]);
+
+  useEffect(() => {
+    if (!gameState) {
+      setVisualPlayers([]);
+      return;
+    }
+
+    const isLandingModalActive = gameState.activeModal && ['pay_rent', 'pay_tax', 'chance', 'community_chest'].includes(gameState.activeModal);
+    const shouldUpdateMoney = isAnimDone && !isLandingModalActive;
+
+    setVisualPlayers((prev) => {
+      return gameState.players.map((p) => {
+        const prevPlayer = prev.find((pr) => pr.id === p.id);
+        if (prevPlayer && !shouldUpdateMoney) {
+          return {
+            ...p,
+            money: prevPlayer.money,
+          };
+        }
+        return p;
+      });
+    });
+  }, [gameState, isAnimDone]);
 
   return (
     <div className="h-screen w-screen bg-slate-950 text-slate-100 flex flex-col overflow-hidden relative select-none">
@@ -143,6 +170,7 @@ export default function App() {
                 jailAction={jailAction}
                 settleFunds={settleFunds}
                 finishBuild={finishBuild}
+                onAnimationStatusChange={setIsAnimDone}
               />
             </div>
 
@@ -151,8 +179,8 @@ export default function App() {
               
               {/* Sidebar danh sách người chơi Glassmorphism */}
               <div className="flex-[4] bg-slate-900/20 backdrop-blur-md border border-slate-800/80 rounded-2xl p-3.5 overflow-hidden flex flex-col shadow-2xl">
-                <PlayerList
-                  players={gameState.players}
+                 <PlayerList
+                  players={visualPlayers.length > 0 ? visualPlayers : gameState.players}
                   activePlayerIndex={gameState.activePlayerIndex}
                   tiles={gameState.tiles}
                   playerId={playerId}
@@ -170,6 +198,7 @@ export default function App() {
                   mortgageTile={mortgageTile}
                   unmortgageTile={unmortgageTile}
                   sellDeed={sellDeed}
+                  visualMoney={visualPlayers.find((p) => p.id === playerId)?.money}
                 />
               </div>
 

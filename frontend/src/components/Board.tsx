@@ -5,7 +5,7 @@ import { GameBoard3D } from './scene3d/GameBoard3D';
 
 import type { GameState, Player, TileMetadata } from '../types/game';
 import boardDataRaw from '../data/board.json';
-import { playClickSound } from '../utils/sound';
+import { playTokenMoveSound, playDiceRollingSound } from '../utils/sound';
 import { Coins, Lock, Skull, ShieldAlert, HelpCircle, Gift, ArrowRight, FileText } from 'lucide-react';
 
 const boardData = boardDataRaw as TileMetadata[];
@@ -24,6 +24,7 @@ interface BoardProps {
   jailAction: (method: 'pay' | 'use_card') => void;
   settleFunds: () => void;
   finishBuild: () => void;
+  onAnimationStatusChange?: (done: boolean) => void;
 }
 
 export function Board({
@@ -40,6 +41,7 @@ export function Board({
   jailAction,
   settleFunds,
   finishBuild,
+  onAnimationStatusChange,
 }: BoardProps) {
   const { tiles, players, activePlayerIndex, dice, diceRolled, currentActionRequired, pendingPayment, winnerId } = gameState;
 
@@ -79,6 +81,7 @@ export function Board({
       setPrevDice(dice);
       setLocalDiceRolling(true);
       setWalkBlocked(true);
+      playDiceRollingSound();
 
       // Bắt đầu animation MỚI → huỷ timer của lượt trước (nếu còn).
       if (rollTimerRef.current) clearTimeout(rollTimerRef.current);
@@ -159,7 +162,7 @@ export function Board({
           ...prev,
           [targetPlayer.id]: nextVisual,
         }));
-        playClickSound(); // Âm thanh từng bước đi
+        playTokenMoveSound(targetPlayer.tokenSkin); // Âm thanh từng bước đi riêng biệt cho từng nhân vật
 
         if (nextVisual === targetPos) {
           // Khi đáp xuống ô đích cuối cùng, kích hoạt Double-Pulse highlight (500ms)
@@ -195,6 +198,10 @@ export function Board({
         visualPositions[p.id] === undefined ||
         visualPositions[p.id] === p.position,
     );
+
+  useEffect(() => {
+    onAnimationStatusChange?.(isAnimationDone);
+  }, [isAnimationDone, onAnimationStatusChange]);
 
   // Kiểm tra nhóm độc quyền (Monopoly) của một ô đất để vẽ hiệu ứng viền phát sáng
   const isGroupMonopoly = (group: string, ownerId: string | null): boolean => {
