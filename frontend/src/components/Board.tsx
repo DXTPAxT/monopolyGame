@@ -387,21 +387,21 @@ export function Board({
 
       case 'pay_rent':
         return (
-          <div className="w-full bg-slate-900/95 border border-rose-500/25 rounded-2xl p-4 shadow-2xl flex flex-col md:flex-row gap-4 items-center justify-between animate-fadeIn relative">
-            <div className="flex-grow text-center md:text-left select-none">
-              <div className="w-9 h-9 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mb-2 mx-auto md:mx-0 shrink-0">
+          <div className="w-full bg-slate-900/95 border border-rose-500/25 rounded-2xl p-4 shadow-2xl flex flex-col gap-3.5 items-center justify-center animate-fadeIn relative">
+            <div className="flex flex-col items-center text-center select-none w-full">
+              <div className="w-9 h-9 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mb-1.5 shrink-0">
                 <Coins className="text-rose-450" size={18} />
               </div>
               <h3 className="text-sm font-black text-rose-400 uppercase tracking-wider">Trả Tiền Thuê</h3>
-              <p className="text-xs text-slate-400 mt-1 max-w-[220px] leading-normal">
+              <p className="text-xs text-slate-400 mt-1 max-w-[260px] leading-normal">
                 Bạn dừng chân tại đất của <span className="font-bold text-slate-200">{players.find(p => p.id === payload?.ownerId)?.name}</span>.
               </p>
             </div>
             
-            <div className="w-full md:w-[160px] py-3 px-4 bg-slate-950 border border-slate-850 rounded-xl my-2 md:my-0 text-xs space-y-1 text-left shrink-0">
+            <div className="w-full max-w-[240px] py-3 px-4 bg-slate-950 border border-slate-850 rounded-xl text-xs space-y-1 text-left shrink-0">
               <div className="flex justify-between text-slate-400 font-medium">
                 <span>Mảnh đất:</span>
-                <span className="font-bold text-slate-250 truncate max-w-[90px]">{boardData[payload?.tileId || 0]?.name}</span>
+                <span className="font-bold text-slate-250 truncate max-w-[120px]">{boardData[payload?.tileId || 0]?.name}</span>
               </div>
               <div className="flex justify-between border-t border-slate-900 pt-1.5 font-black text-rose-450 text-sm">
                 <span>Tổng thuê:</span>
@@ -411,7 +411,7 @@ export function Board({
 
             <button
               onClick={endTurn}
-              className="w-full md:w-[130px] py-3 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-450 hover:to-pink-500 text-white font-black text-xs rounded-xl shadow-md transition-all active:scale-[0.98] uppercase tracking-wider shrink-0 flex items-center justify-center gap-1.5 border border-rose-400/20"
+              className="w-full max-w-[240px] py-3 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-450 hover:to-pink-500 text-white font-black text-xs rounded-xl shadow-md transition-all active:scale-[0.98] uppercase tracking-wider shrink-0 flex items-center justify-center gap-1.5 border border-rose-400/20"
             >
               Xác Nhận <ArrowRight size={14} />
             </button>
@@ -420,18 +420,18 @@ export function Board({
 
       case 'pay_tax':
         return (
-          <div className="w-full bg-slate-900/95 border border-orange-500/25 rounded-2xl p-4 shadow-2xl flex flex-col md:flex-row gap-4 items-center justify-between animate-fadeIn relative">
-            <div className="flex-grow text-center md:text-left select-none">
-              <div className="w-9 h-9 rounded-full bg-orange-500/10 border border-orange-500/20 flex items-center justify-center mb-2 mx-auto md:mx-0 shrink-0">
+          <div className="w-full bg-slate-900/95 border border-orange-500/25 rounded-2xl p-4 shadow-2xl flex flex-col gap-3.5 items-center justify-center animate-fadeIn relative">
+            <div className="flex flex-col items-center text-center select-none w-full">
+              <div className="w-9 h-9 rounded-full bg-orange-500/10 border border-orange-500/20 flex items-center justify-center mb-1.5 shrink-0">
                 <ShieldAlert className="text-orange-450" size={18} />
               </div>
               <h3 className="text-sm font-black text-orange-400 uppercase tracking-wider">Khấu Trừ Thuế</h3>
-              <p className="text-xs text-slate-400 mt-1 max-w-[220px] leading-normal">
+              <p className="text-xs text-slate-400 mt-1 max-w-[260px] leading-normal">
                 Nộp thuế theo luật định để cân bằng tài chính quốc gia.
               </p>
             </div>
             
-            <div className="w-full md:w-[150px] py-3 px-4 bg-slate-950 border border-slate-850 rounded-xl my-2 md:my-0 text-left shrink-0 select-none">
+            <div className="w-full max-w-[240px] py-3 px-4 bg-slate-950 border border-slate-850 rounded-xl text-left shrink-0 select-none">
               <div className="flex justify-between font-black text-orange-400 text-sm">
                 <span>Số thuế:</span>
                 <span className="font-mono">${payload?.amount}</span>
@@ -440,7 +440,7 @@ export function Board({
 
             <button
               onClick={endTurn}
-              className="w-full md:w-[130px] py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-450 hover:to-amber-450 text-white font-black text-xs rounded-xl shadow-md transition-all active:scale-[0.98] uppercase tracking-wider shrink-0 border border-orange-400/20"
+              className="w-full max-w-[240px] py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-450 hover:to-amber-450 text-white font-black text-xs rounded-xl shadow-md transition-all active:scale-[0.98] uppercase tracking-wider shrink-0 border border-orange-400/20"
             >
               Nộp Thuế
             </button>
@@ -449,24 +449,24 @@ export function Board({
 
       case 'jail':
         return (
-          <div className="w-full bg-slate-900/95 border border-red-500/25 rounded-2xl p-4 shadow-2xl flex flex-col md:flex-row gap-4 items-center justify-between animate-fadeIn relative">
-            <div className="flex-grow text-center md:text-left select-none">
-              <div className="w-9 h-9 rounded-full bg-red-650/10 border border-red-650/20 flex items-center justify-center mb-2 mx-auto md:mx-0 shrink-0">
+          <div className="w-full bg-slate-900/95 border border-red-500/25 rounded-2xl p-4 shadow-2xl flex flex-col gap-3.5 items-center justify-center animate-fadeIn relative">
+            <div className="flex flex-col items-center text-center select-none w-full">
+              <div className="w-9 h-9 rounded-full bg-red-650/10 border border-red-650/20 flex items-center justify-center mb-1.5 shrink-0">
                 <Lock className="text-red-500 animate-pulse" size={18} />
               </div>
-              <h3 className="text-sm font-black text-red-555 uppercase tracking-wider">Vào Nhà Tù</h3>
-              <p className="text-xs text-slate-400 mt-1 leading-normal">
+              <h3 className="text-sm font-black text-red-500 uppercase tracking-wider">Vào Nhà Tù</h3>
+              <p className="text-xs text-slate-400 mt-1 max-w-[260px] leading-normal">
                 Bị tạm giam do dừng vào ô cảnh sát hoặc rút phải thẻ phạt.
               </p>
             </div>
             
-            <p className="text-[10px] text-slate-500 leading-normal max-w-[140px] my-2 md:my-0 text-center md:text-left shrink-0 select-none">
+            <p className="text-[10px] text-slate-500 leading-normal max-w-[240px] text-center select-none">
               Thoát án ở lượt sau nếu đổ xúc xắc đôi hoặc nộp $50.
             </p>
 
             <button
               onClick={endTurn}
-              className="w-full md:w-[130px] py-3 bg-slate-800 hover:bg-slate-750 border border-slate-700/60 text-white font-black text-xs rounded-xl transition-all uppercase tracking-wider shrink-0"
+              className="w-full max-w-[240px] py-3 bg-slate-800 hover:bg-slate-750 border border-slate-700/60 text-white font-black text-xs rounded-xl transition-all uppercase tracking-wider shrink-0"
             >
               Chấp Nhận
             </button>
@@ -477,11 +477,11 @@ export function Board({
       case 'community_chest':
         const isChance = modalType === 'chance';
         return (
-          <div className={`w-full bg-slate-900/95 border rounded-2xl p-4 shadow-2xl flex flex-col md:flex-row gap-4 items-center justify-between animate-fadeIn relative ${
+          <div className={`w-full bg-slate-900/95 border rounded-2xl p-4 shadow-2xl flex flex-col gap-3.5 items-center justify-center animate-fadeIn relative ${
             isChance ? 'border-amber-400/25' : 'border-emerald-500/25'
           }`}>
-            <div className="flex-grow text-center md:text-left select-none">
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center mb-2 mx-auto md:mx-0 shrink-0 ${
+            <div className="flex flex-col items-center text-center select-none w-full">
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center mb-1.5 shrink-0 ${
                 isChance ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-emerald-500/10 border border-emerald-500/20'
               }`}>
                 {isChance ? <HelpCircle className="text-amber-400" size={18} /> : <Gift className="text-emerald-450" size={18} />}
@@ -491,13 +491,13 @@ export function Board({
               </h3>
             </div>
             
-            <div className="w-full md:w-[200px] p-3 bg-slate-950 border border-slate-850 rounded-xl my-2 md:my-0 text-xs font-bold leading-normal text-slate-200 text-center shrink-0">
+            <div className="w-full max-w-[250px] p-3.5 bg-slate-950 border border-slate-850 rounded-xl text-xs font-bold leading-relaxed text-slate-200 text-center shrink-0">
               "{payload?.cardText}"
             </div>
 
             <button
               onClick={endTurn}
-              className="w-full md:w-[130px] py-3 bg-gradient-to-r from-indigo-500 to-indigo-650 hover:from-indigo-450 hover:to-indigo-550 text-white font-black text-xs rounded-xl shadow-md transition-all uppercase tracking-wider shrink-0 flex items-center justify-center gap-1.5 border border-indigo-400/20"
+              className="w-full max-w-[250px] py-3 bg-gradient-to-r from-indigo-500 to-indigo-650 hover:from-indigo-450 hover:to-indigo-550 text-white font-black text-xs rounded-xl shadow-md transition-all uppercase tracking-wider shrink-0 flex items-center justify-center gap-1.5 border border-indigo-400/20"
             >
               Tiếp Tục <ArrowRight size={14} />
             </button>
@@ -506,31 +506,31 @@ export function Board({
 
       case 'bankruptcy':
         return (
-          <div className="w-full bg-slate-900/95 border border-red-500/25 rounded-2xl p-4 shadow-2xl flex flex-col md:flex-row gap-4 items-center justify-between animate-fadeIn relative">
-            <div className="flex-grow text-center md:text-left select-none">
-              <div className="w-9 h-9 rounded-full bg-red-900/10 border border-red-900/20 flex items-center justify-center mb-2 mx-auto md:mx-0 shrink-0">
+          <div className="w-full bg-slate-900/95 border border-red-500/25 rounded-2xl p-4 shadow-2xl flex flex-col gap-3.5 items-center justify-center animate-fadeIn relative">
+            <div className="flex flex-col items-center text-center select-none w-full">
+              <div className="w-9 h-9 rounded-full bg-red-900/10 border border-red-900/20 flex items-center justify-center mb-1.5 shrink-0">
                 <Skull className="text-red-500 animate-bounce" size={18} />
               </div>
-              <h3 className="text-sm font-black text-red-555 uppercase tracking-wider">Khủng Hoảng Nợ</h3>
-              <p className="text-[10px] text-slate-400 mt-1 max-w-[200px] leading-normal">
+              <h3 className="text-sm font-black text-red-550 uppercase tracking-wider">Khủng Hoảng Nợ</h3>
+              <p className="text-xs text-slate-400 mt-1 max-w-[260px] leading-normal">
                 Không đủ tiền mặt để thực hiện nghĩa vụ tài chính!
               </p>
             </div>
             
-            <div className="w-full md:w-[150px] py-2.5 px-3.5 bg-slate-950 border border-slate-850 rounded-xl my-2 md:my-0 text-[10px] font-mono text-red-350 text-left shrink-0 select-none">
+            <div className="w-full max-w-[240px] py-2.5 px-3.5 bg-slate-950 border border-slate-850 rounded-xl text-[11px] font-mono text-red-350 text-left shrink-0 select-none">
               <div className="flex justify-between">
                 <span>Nợ phạt:</span>
-                <span>${payload?.amount}</span>
+                <span className="font-bold">${payload?.amount}</span>
               </div>
-              <div className="flex justify-between font-bold">
+              <div className="flex justify-between border-t border-slate-900/60 pt-1 mt-1 font-bold">
                 <span>Tiền mặt:</span>
-                <span>${activePlayer?.money}</span>
+                <span className="text-emerald-450">${activePlayer?.money}</span>
               </div>
             </div>
 
             <button
               onClick={declareBankruptcy}
-              className="w-full md:w-[130px] py-3 bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-550 hover:to-rose-600 text-white font-black text-xs rounded-xl shadow-md transition-all uppercase tracking-wider shrink-0 border border-red-400/20"
+              className="w-full max-w-[240px] py-3 bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-550 hover:to-rose-600 text-white font-black text-xs rounded-xl shadow-md transition-all uppercase tracking-wider shrink-0 border border-red-400/20"
             >
               Phá Sản
             </button>

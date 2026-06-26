@@ -634,14 +634,14 @@ export function GameBoard3D({
             <DieMesh
               value={dice[0]}
               rolling={localDiceRolling}
-              position={[-2.4, 0.35, 0.4]}
+              position={[-3.1, 0.35, 1.8]}
               colors={diceColors}
               size={0.6}
             />
             <DieMesh
               value={dice[1]}
               rolling={localDiceRolling}
-              position={[2.4, 0.35, -0.4]}
+              position={[3.1, 0.35, -1.8]}
               colors={diceColors}
               size={0.6}
             />
@@ -658,7 +658,7 @@ export function GameBoard3D({
           pointerEvents="auto"
           style={{ pointerEvents: 'auto' }}
         >
-          <div className="w-[340px] pointer-events-auto">
+          <div className="w-[320px] pointer-events-auto">
             {hudContent}
           </div>
         </Html>
