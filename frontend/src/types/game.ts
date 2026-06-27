@@ -91,6 +91,18 @@ export interface Card {
   effect: CardEffect;
 }
 
+export interface PendingLanding {
+  kind: 'pay_rent' | 'pay_tax' | 'card' | 'go_to_jail' | 'parking_jackpot';
+  tileId?: number;
+  amount?: number;
+  ownerId?: string;
+  card?: {
+    type: 'chance' | 'community_chest';
+    text: string;
+    effect: CardEffect;
+  };
+}
+
 // ---- Cấu hình phòng ----
 export type GameMode = 'classic' | 'fast' | 'chaos';
 export interface HouseRules {
@@ -161,6 +173,7 @@ export interface GameState {
   } | null;
   activeModal: ModalType;
   modalPayload: ModalPayload | null;
+  pendingLanding: PendingLanding | null;
   settings: RoomSettings;
   freeParkingPot: number;
   rolledDoubles: boolean;

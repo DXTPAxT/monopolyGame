@@ -4,7 +4,7 @@
 // dùng các module engine mới (đã unit-test) theo docs/RULES.md.
 // ============================================================
 import {
-  GameState, Player, TileMetadata, TileState, RoomSettings, DEFAULT_ROOM_SETTINGS,
+  GameState, Player, TileMetadata, TileState, RoomSettings, DEFAULT_ROOM_SETTINGS, PendingLanding,
 } from './types';
 import boardDataRaw from '../data/board.json';
 import { rollDice } from '../utils/helpers';
@@ -60,6 +60,7 @@ export function initializeGame(roomCode: string, players: Player[], settings: Ro
     activeCard: null,
     activeModal: null,
     modalPayload: null,
+    pendingLanding: null,
     settings,
     freeParkingPot: 0,
     rolledDoubles: false,
@@ -74,6 +75,7 @@ function clearModals(state: GameState) {
   state.currentActionRequired = 'none';
   state.activeModal = null;
   state.modalPayload = null;
+  state.pendingLanding = null;
 }
 
 /** Mở modal xây nhà (tùy chọn, không chặn kết thúc lượt) cho ô property đang đứng. */

@@ -48,6 +48,7 @@ export function endTurn(state: GameState): EndTurnResult {
     state.activeCard = null;
     state.activeModal = null;
     state.modalPayload = null;
+    state.pendingLanding = null;
     applyTurnDeadline(state);
     return {
       events: [`${player.name} đổ đôi nên được đi thêm một lượt!`],
@@ -65,6 +66,7 @@ export function endTurn(state: GameState): EndTurnResult {
   state.activeCard = null;
   state.activeModal = null;
   state.modalPayload = null;
+  state.pendingLanding = null;
   resetDoubles(state);
   applyTurnDeadline(state);
 
