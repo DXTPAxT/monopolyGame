@@ -30,6 +30,7 @@ export default function App() {
     buyProperty,
     buildHouse,
     endTurn,
+    confirmLanding,
     declareBankruptcy,
     sendChat,
     restartGame,
@@ -164,6 +165,7 @@ export default function App() {
                 buyProperty={buyProperty}
                 buildHouse={buildHouse}
                 endTurn={endTurn}
+                confirmLanding={confirmLanding}
                 declareBankruptcy={declareBankruptcy}
                 restartGame={restartGame}
                 declineBuy={declineBuy}

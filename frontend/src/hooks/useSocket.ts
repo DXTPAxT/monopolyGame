@@ -185,6 +185,13 @@ export function useSocket() {
     }
   };
 
+  const confirmLanding = () => {
+    if (roomCode) {
+      playClickSound();
+      socketRef.current?.emit('confirm_landing', { roomCode });
+    }
+  };
+
   const declareBankruptcy = () => {
     if (roomCode) {
       playSadSound();
@@ -266,6 +273,7 @@ export function useSocket() {
     buyProperty,
     buildHouse,
     endTurn,
+    confirmLanding,
     declareBankruptcy,
     sendChat,
     restartGame,

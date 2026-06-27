@@ -18,6 +18,7 @@ interface BoardProps {
   buyProperty: () => void;
   buildHouse: (tileId: number) => void;
   endTurn: () => void;
+  confirmLanding: () => void;
   declareBankruptcy: () => void;
   restartGame: () => void;
   declineBuy: () => void;
@@ -35,6 +36,7 @@ export function Board({
   buyProperty,
   buildHouse,
   endTurn,
+  confirmLanding,
   declareBankruptcy,
   restartGame,
   declineBuy,
@@ -417,7 +419,7 @@ export function Board({
             </div>
 
             <button
-              onClick={endTurn}
+              onClick={confirmLanding}
               className="w-full max-w-[240px] py-3 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-450 hover:to-pink-500 text-white font-black text-xs rounded-xl shadow-md transition-all active:scale-[0.98] uppercase tracking-wider shrink-0 flex items-center justify-center gap-1.5 border border-rose-400/20"
             >
               Xác Nhận <ArrowRight size={14} />
@@ -446,7 +448,7 @@ export function Board({
             </div>
 
             <button
-              onClick={endTurn}
+              onClick={confirmLanding}
               className="w-full max-w-[240px] py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-450 hover:to-amber-450 text-white font-black text-xs rounded-xl shadow-md transition-all active:scale-[0.98] uppercase tracking-wider shrink-0 border border-orange-400/20"
             >
               Nộp Thuế
@@ -472,7 +474,7 @@ export function Board({
             </p>
 
             <button
-              onClick={endTurn}
+              onClick={confirmLanding}
               className="w-full max-w-[240px] py-3 bg-slate-800 hover:bg-slate-750 border border-slate-700/60 text-white font-black text-xs rounded-xl transition-all uppercase tracking-wider shrink-0"
             >
               Chấp Nhận
@@ -503,7 +505,7 @@ export function Board({
             </div>
 
             <button
-              onClick={endTurn}
+              onClick={confirmLanding}
               className="w-full max-w-[250px] py-3 bg-gradient-to-r from-indigo-500 to-indigo-650 hover:from-indigo-450 hover:to-indigo-550 text-white font-black text-xs rounded-xl shadow-md transition-all uppercase tracking-wider shrink-0 flex items-center justify-center gap-1.5 border border-indigo-400/20"
             >
               Tiếp Tục <ArrowRight size={14} />

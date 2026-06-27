@@ -13,6 +13,7 @@ interface InteractiveModalProps {
   onBankruptcy: () => void;
   onDismiss: () => void;
   onEndTurn: () => void;
+  onConfirm: () => void;
 }
 
 // Hàm tính tiền thuê cho hiển thị bảng khoán
@@ -29,6 +30,7 @@ export function InteractiveModal({
   onBankruptcy,
   onDismiss,
   onEndTurn,
+  onConfirm,
 }: InteractiveModalProps) {
   const { currentActionRequired, pendingPayment, players, tiles, activePlayerIndex, activeCard } = gameState;
   
@@ -68,9 +70,9 @@ export function InteractiveModal({
   } else if (owner && owner.id !== activePlayer.id) {
     modalType = 'rent_info';
     isDismissible = true;
-  } else if (activePlayer.inJail) {
+  } else if (activePlayer.inJail || currentActionRequired === 'go_to_jail') {
     modalType = 'jail_info';
-    isDismissible = true;
+    isDismissible = false; // bắt buộc bấm Xác nhận để vào tù
   } else {
     modalType = 'safe_info';
     isDismissible = true;
@@ -298,7 +300,7 @@ export function InteractiveModal({
 
             <div className="flex flex-col gap-2 w-full">
               <button
-                onClick={onEndTurn}
+                onClick={onConfirm}
                 className="w-full py-3 px-6 bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold rounded-2xl shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-1.5"
               >
                 Xác Nhận & Kết Thúc Lượt <ArrowRight size={16} aria-hidden="true" />
@@ -335,7 +337,7 @@ export function InteractiveModal({
 
             <div className="flex flex-col gap-2 w-full mt-2">
               <button
-                onClick={onEndTurn}
+                onClick={onConfirm}
                 className="w-full py-3.5 px-6 bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-extrabold rounded-2xl shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-1.5"
               >
                 Xác Nhận & Kết Thúc Lượt <ArrowRight size={16} aria-hidden="true" />
@@ -368,7 +370,7 @@ export function InteractiveModal({
 
             <div className="flex flex-col gap-2 w-full mt-2">
               <button
-                onClick={onEndTurn}
+                onClick={onConfirm}
                 className="w-full py-3.5 px-6 bg-amber-600 hover:bg-amber-500 text-white font-extrabold rounded-2xl shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-1.5"
               >
                 Xác Nhận & Kết Thúc Lượt <ArrowRight size={16} aria-hidden="true" />
@@ -395,7 +397,7 @@ export function InteractiveModal({
             </div>
 
             <button
-              onClick={onEndTurn}
+              onClick={onConfirm}
               className="w-full py-3.5 px-6 bg-slate-700 hover:bg-slate-650 text-white font-extrabold rounded-2xl shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-1.5"
             >
               Chấp Nhận & Kết Thúc Lượt <ArrowRight size={16} aria-hidden="true" />
@@ -427,7 +429,7 @@ export function InteractiveModal({
 
             <div className="flex flex-col gap-2 w-full">
               <button
-                onClick={onEndTurn}
+                onClick={onConfirm}
                 className="w-full py-3.5 px-6 bg-indigo-650 hover:bg-indigo-550 text-white font-extrabold rounded-2xl shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-1.5"
               >
                 Xác Nhận & Kết Thúc Lượt <ArrowRight size={16} aria-hidden="true" />
