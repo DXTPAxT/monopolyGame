@@ -246,14 +246,15 @@ export function announceTileLanding(
     }
 
     case 'parking': {
+      // Hũ jackpot là thưởng thụ động (không cần quyết định) → cộng ngay, không hoãn.
+      // Tránh kẹt UI vì 'go_landing' không có modal render ở Board.tsx.
       if (state.settings.houseRules.freeParkingJackpot && state.freeParkingPot > 0) {
-        state.pendingLanding = { kind: 'parking_jackpot', amount: state.freeParkingPot };
-        state.currentActionRequired = 'none';
-        state.activeModal = 'go_landing';
-        state.modalPayload = { amount: state.freeParkingPot };
-      } else {
-        clearModals(state);
+        const pot = state.freeParkingPot;
+        player.money += pot;
+        state.freeParkingPot = 0;
+        state.logs.push(`${player.name} đáp Bãi Đỗ Xe và nhận hũ jackpot $${pot}!`);
       }
+      clearModals(state);
       break;
     }
 
@@ -326,15 +327,6 @@ export function confirmLanding(state: GameState): { state: GameState; event: str
       break;
     }
 
-    case 'parking_jackpot': {
-      const pot = pl.amount ?? 0;
-      state.pendingLanding = null;
-      player.money += pot;
-      state.freeParkingPot = 0;
-      state.logs.push(`${player.name} đáp Bãi Đỗ Xe và nhận hũ jackpot $${pot}!`);
-      clearModals(state);
-      break;
-    }
 
     case 'go_to_jail': {
       state.pendingLanding = null;

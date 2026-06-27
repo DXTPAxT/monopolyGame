@@ -92,7 +92,7 @@ export interface Card {
 }
 
 export interface PendingLanding {
-  kind: 'pay_rent' | 'pay_tax' | 'card' | 'go_to_jail' | 'parking_jackpot';
+  kind: 'pay_rent' | 'pay_tax' | 'card' | 'go_to_jail';
   tileId?: number;
   amount?: number;
   ownerId?: string;
