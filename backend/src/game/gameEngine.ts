@@ -172,6 +172,213 @@ export function rollDiceAndMove(state: GameState): { state: GameState; event: st
   return { state, event: log };
 }
 
+// ---------- Announce Tile Landing (pha THÔNG BÁO, không mutate) ----------
+
+export function announceTileLanding(
+  state: GameState,
+  player: Player,
+  tile: TileMetadata,
+  opts?: { forcedCardId?: string },
+): void {
+  const tileState = state.tiles.find((t) => t.id === tile.id)!;
+
+  switch (tile.type) {
+    case 'property':
+    case 'railroad':
+    case 'utility': {
+      if (tileState.ownerId === null) {
+        state.currentActionRequired = 'buy_or_pass';
+        state.activeModal = 'buy_property';
+        state.modalPayload = { tileId: tile.id };
+      } else if (tileState.ownerId === player.id) {
+        tileState.ownerVisits += 1; // cập nhật sổ sách, được phép
+        if (tile.type === 'property') {
+          openBuildModal(state, tile.id);
+        } else {
+          clearModals(state);
+        }
+      } else {
+        const owner = state.players.find((p) => p.id === tileState.ownerId);
+        if (!owner || owner.isBankrupt || tileState.mortgaged) {
+          clearModals(state);
+          break;
+        }
+        const rent = calcRent(state, tile.id, state.dice[0] + state.dice[1]);
+        state.pendingLanding = { kind: 'pay_rent', tileId: tile.id, amount: rent, ownerId: owner.id };
+        state.currentActionRequired = 'pay_rent';
+        state.activeModal = 'pay_rent';
+        state.modalPayload = { tileId: tile.id, amount: rent, ownerId: owner.id };
+      }
+      break;
+    }
+
+    case 'tax': {
+      const taxAmount = tile.price || 0;
+      state.pendingLanding = { kind: 'pay_tax', tileId: tile.id, amount: taxAmount };
+      state.currentActionRequired = 'pay_tax';
+      state.activeModal = 'pay_tax';
+      state.modalPayload = { tileId: tile.id, amount: taxAmount };
+      break;
+    }
+
+    case 'go_to_jail': {
+      state.pendingLanding = { kind: 'go_to_jail' };
+      state.currentActionRequired = 'go_to_jail';
+      state.activeModal = 'jail';
+      state.modalPayload = { tileId: 10 };
+      break;
+    }
+
+    case 'chance':
+    case 'community_chest': {
+      const type = tile.type === 'chance' ? 'chance' : 'community_chest';
+      const deck = type === 'chance' ? CHANCE_CARDS : COMMUNITY_CARDS;
+      const card = opts?.forcedCardId
+        ? deck.find((c) => c.id === opts.forcedCardId)!
+        : deck[Math.floor(Math.random() * deck.length)];
+      state.activeCard = { type, text: card.text };
+      state.pendingLanding = { kind: 'card', card: { type, text: card.text, effect: card.effect } };
+      state.currentActionRequired = 'draw_card';
+      state.activeModal = type;
+      state.modalPayload = { cardText: card.text };
+      break;
+    }
+
+    case 'parking': {
+      if (state.settings.houseRules.freeParkingJackpot && state.freeParkingPot > 0) {
+        state.pendingLanding = { kind: 'parking_jackpot', amount: state.freeParkingPot };
+        state.currentActionRequired = 'none';
+        state.activeModal = 'go_landing';
+        state.modalPayload = { amount: state.freeParkingPot };
+      } else {
+        clearModals(state);
+      }
+      break;
+    }
+
+    default: {
+      // GO, Jail (thăm viếng): GO doubleGo là thưởng thụ động, áp ngay (không cần modal xác nhận).
+      if (tile.id === 0 && state.settings.houseRules.doubleGo) {
+        player.money += 200;
+        state.logs.push(`${player.name} đáp đúng ô Bắt Đầu — thưởng gấp đôi (+$200)!`);
+      }
+      clearModals(state);
+      break;
+    }
+  }
+}
+
+// ---------- Confirm Landing (pha THỰC THI) ----------
+
+/** Sau khi thực thi xong: nếu không còn hành động/modal chờ → tự kết thúc lượt. */
+function maybeAutoEndTurn(state: GameState): string | null {
+  const blockingOrChoice =
+    state.currentActionRequired !== 'none' ||
+    state.pendingLanding !== null ||
+    state.activeModal === 'build_houses' ||
+    state.activeModal === 'buy_property';
+  if (blockingOrChoice) return null;
+  const res = endTurnModule(state);
+  res.events.forEach((e) => state.logs.push(e));
+  return res.events[0] ?? null;
+}
+
+export function confirmLanding(state: GameState): { state: GameState; event: string } {
+  const player = state.players[state.activePlayerIndex];
+  const pl = state.pendingLanding;
+
+  if (!pl) {
+    // Không có hậu quả chờ (ô an toàn) → kết thúc lượt.
+    const ev = maybeAutoEndTurn(state) ?? 'Kết thúc lượt.';
+    return { state, event: ev };
+  }
+
+  switch (pl.kind) {
+    case 'pay_rent': {
+      const owner = state.players.find((p) => p.id === pl.ownerId);
+      const amount = pl.amount ?? 0;
+      state.pendingLanding = null;
+      if (!owner) { clearModals(state); break; }
+      state.logs.push(`${player.name} phải trả $${amount} tiền thuê cho ${owner.name}.`);
+      if (player.money >= amount) {
+        player.money -= amount;
+        owner.money += amount;
+        clearModals(state);
+      } else {
+        setDebt(state, player, amount, owner.id, 'rent');
+      }
+      break;
+    }
+
+    case 'pay_tax': {
+      const amount = pl.amount ?? 0;
+      state.pendingLanding = null;
+      if (state.settings.houseRules.freeParkingJackpot) {
+        state.freeParkingPot += amount;
+      }
+      if (player.money >= amount) {
+        player.money -= amount;
+        clearModals(state);
+      } else {
+        setDebt(state, player, amount, 'bank', 'tax');
+      }
+      break;
+    }
+
+    case 'parking_jackpot': {
+      const pot = pl.amount ?? 0;
+      state.pendingLanding = null;
+      player.money += pot;
+      state.freeParkingPot = 0;
+      state.logs.push(`${player.name} đáp Bãi Đỗ Xe và nhận hũ jackpot $${pot}!`);
+      clearModals(state);
+      break;
+    }
+
+    case 'go_to_jail': {
+      state.pendingLanding = null;
+      goToJail(state, player);
+      clearModals(state);
+      break;
+    }
+
+    case 'card': {
+      const cardData = pl.card!;
+      state.pendingLanding = null;
+      const beforePos = player.position;
+      const cardForEngine = { id: 'pending', text: cardData.text, effect: cardData.effect };
+      const { events } = applyCard(state, player, cardForEngine as import('./types').Card);
+      events.forEach((e) => state.logs.push(e));
+
+      // Nợ âm tiền sau hiệu ứng (repairs / money / moneyPerPlayer)
+      if (player.money < 0) {
+        const debt = Math.abs(player.money);
+        player.money = 0;
+        setDebt(state, player, debt, 'bank', 'other');
+        break;
+      }
+      // Thẻ đưa vào tù
+      if (player.inJail) {
+        clearModals(state);
+        break;
+      }
+      // Thẻ di chuyển → thông báo ô mới (nối chuỗi)
+      if (player.position !== beforePos) {
+        clearModals(state);
+        state.activeCard = null;
+        announceTileLanding(state, player, getTile(player.position));
+        break;
+      }
+      // Thẻ tiền/getOutOfJail/repairs (không di chuyển) → xong
+      clearModals(state);
+      break;
+    }
+  }
+
+  const ev = maybeAutoEndTurn(state);
+  return { state, event: ev ?? (state.logs[state.logs.length - 1] ?? 'Đã xác nhận.') };
+}
+
 // ---------- Resolve Tile Landing ----------
 
 function resolveTileLanding(state: GameState, player: Player, tile: TileMetadata) {
