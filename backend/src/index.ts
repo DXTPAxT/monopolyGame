@@ -316,6 +316,8 @@ io.on('connection', (socket) => {
     const { state, event } = confirmLanding(room.gameState);
     room.gameState = state;
     io.to(roomCode.toUpperCase()).emit('game_state_update', { gameState: room.gameState, lastEvent: event });
+    // confirmLanding có thể tự kết thúc lượt (đổi người chơi) → lên lại đồng hồ lượt như end_turn.
+    armTurnTimer(roomCode);
   });
 
   // 8. Tuyên bố phá sản
