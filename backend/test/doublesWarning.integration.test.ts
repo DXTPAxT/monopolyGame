@@ -6,7 +6,7 @@ vi.mock('../src/utils/helpers', async (importOriginal) => {
   return { ...actual, rollDice: () => [3, 3] as [number, number] };
 });
 
-import { initializeGame, rollDiceAndMove, endTurn } from '../src/game/gameEngine';
+import { initializeGame, rollDiceAndMove, confirmLanding, endTurn } from '../src/game/gameEngine';
 import { Player } from '../src/game/types';
 
 function basePlayer(id: string): Player {
@@ -47,6 +47,7 @@ describe('Mục 2 — cảnh báo đổ đôi & luật 3 đôi liên tiếp', ()
     rollDiceAndMove(s); endTurn(s); // đôi 1
     rollDiceAndMove(s); endTurn(s); // đôi 2
     rollDiceAndMove(s);             // đôi 3 → vào tù
+    confirmLanding(s);
 
     expect(s.players[0].inJail).toBe(true);
   });

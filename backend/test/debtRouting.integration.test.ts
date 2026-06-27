@@ -6,7 +6,7 @@ vi.mock('../src/utils/helpers', async (importOriginal) => {
   return { ...actual, rollDice: () => [1, 2] as [number, number] };
 });
 
-import { initializeGame, rollDiceAndMove } from '../src/game/gameEngine';
+import { initializeGame, rollDiceAndMove, confirmLanding } from '../src/game/gameEngine';
 import { Player } from '../src/game/types';
 
 function basePlayer(id: string): Player {
@@ -34,6 +34,7 @@ describe('Mục 3 — nợ tiền thuê không đủ tiền mặt nhưng còn t�
     s.players[1].position = 0; // 0 + 3 = ô 3 (không qua GO)
 
     rollDiceAndMove(s);
+    confirmLanding(s);
 
     expect(s.players[1].position).toBe(3);
     expect(s.players[1].isBankrupt).toBe(false);
@@ -57,6 +58,7 @@ describe('Mục 3 — nợ tiền thuê không đủ tiền mặt nhưng còn t�
     s.players[1].position = 0;
 
     rollDiceAndMove(s);
+    confirmLanding(s);
 
     expect(s.currentActionRequired).toBe('bankruptcy_decision');
     expect(s.activeModal).toBe('bankruptcy');
