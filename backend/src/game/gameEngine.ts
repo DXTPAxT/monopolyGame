@@ -140,7 +140,7 @@ export function rollDiceAndMove(state: GameState): { state: GameState; event: st
     }
     // Đã ra tù và jailAction đã di chuyển → giải quyết ô đáp xuống
     state.hasMoved = true;
-    resolveTileLanding(state, player, getTile(player.position));
+    announceTileLanding(state, player, getTile(player.position));
     state.logs.push(log);
     return { state, event: log };
   }
@@ -148,9 +148,10 @@ export function rollDiceAndMove(state: GameState): { state: GameState; event: st
   // --- Không ở tù: đăng ký doubles ---
   const { goToJailForDoubles } = registerRoll(state);
   if (goToJailForDoubles) {
-    goToJail(state, player);
     log += ' Đổ đôi 3 lần liên tiếp — bị áp giải vào tù!';
-    clearModals(state);
+    state.hasMoved = true;
+    state.pendingLanding = { kind: 'go_to_jail' };
+    state.currentActionRequired = 'go_to_jail';
     state.activeModal = 'jail';
     state.modalPayload = { tileId: 10 };
     state.logs.push(log);
@@ -166,7 +167,7 @@ export function rollDiceAndMove(state: GameState): { state: GameState; event: st
   if (state.doublesCount === 2) {
     log += ' ⚠️ Đổ đôi lần thứ 2 liên tiếp — nếu đổ đôi lần nữa bạn sẽ bị vào tù!';
   }
-  resolveTileLanding(state, player, tile);
+  announceTileLanding(state, player, tile);
 
   state.logs.push(log);
   return { state, event: log };
@@ -377,145 +378,6 @@ export function confirmLanding(state: GameState): { state: GameState; event: str
 
   const ev = maybeAutoEndTurn(state);
   return { state, event: ev ?? (state.logs[state.logs.length - 1] ?? 'Đã xác nhận.') };
-}
-
-// ---------- Resolve Tile Landing ----------
-
-function resolveTileLanding(state: GameState, player: Player, tile: TileMetadata) {
-  const tileState = state.tiles.find((t) => t.id === tile.id)!;
-
-  switch (tile.type) {
-    case 'property':
-    case 'railroad':
-    case 'utility': {
-      if (tileState.ownerId === null) {
-        state.currentActionRequired = 'buy_or_pass';
-        state.activeModal = 'buy_property';
-        state.modalPayload = { tileId: tile.id };
-      } else if (tileState.ownerId === player.id) {
-        // Đáp lại ô của mình → tăng số lần ghé; nếu là đất thường → mở modal xây
-        tileState.ownerVisits += 1;
-        if (tile.type === 'property') {
-          openBuildModal(state, tile.id);
-        } else {
-          clearModals(state);
-        }
-      } else {
-        const owner = state.players.find((p) => p.id === tileState.ownerId);
-        if (!owner || owner.isBankrupt || tileState.mortgaged) {
-          clearModals(state);
-          break;
-        }
-        const rent = calcRent(state, tile.id, state.dice[0] + state.dice[1]);
-        state.logs.push(`${player.name} phải trả $${rent} tiền thuê cho ${owner.name}.`);
-        if (player.money >= rent) {
-          player.money -= rent;
-          owner.money += rent;
-          state.currentActionRequired = 'none';
-          state.activeModal = 'pay_rent';
-          state.modalPayload = { tileId: tile.id, amount: rent, ownerId: owner.id };
-        } else {
-          setDebt(state, player, rent, owner.id, 'rent');
-        }
-      }
-      break;
-    }
-
-    case 'tax': {
-      const taxAmount = tile.price || 0;
-      if (state.settings.houseRules.freeParkingJackpot) {
-        state.freeParkingPot += taxAmount;
-      }
-      if (player.money >= taxAmount) {
-        player.money -= taxAmount;
-        state.currentActionRequired = 'none';
-        state.activeModal = 'pay_tax';
-        state.modalPayload = { tileId: tile.id, amount: taxAmount };
-      } else {
-        setDebt(state, player, taxAmount, 'bank', 'tax');
-      }
-      break;
-    }
-
-    case 'go_to_jail': {
-      goToJail(state, player);
-      clearModals(state);
-      state.activeModal = 'jail';
-      state.modalPayload = { tileId: 10 };
-      break;
-    }
-
-    case 'chance':
-      drawAndApplyCard(state, player, 'chance');
-      break;
-
-    case 'community_chest':
-      drawAndApplyCard(state, player, 'community_chest');
-      break;
-
-    case 'parking': {
-      if (state.settings.houseRules.freeParkingJackpot && state.freeParkingPot > 0) {
-        const pot = state.freeParkingPot;
-        player.money += pot;
-        state.freeParkingPot = 0;
-        state.logs.push(`${player.name} đáp Bãi Đỗ Xe và nhận hũ jackpot $${pot}!`);
-      }
-      clearModals(state);
-      break;
-    }
-
-    default: {
-      // GO, Jail (just visiting)
-      if (tile.id === 0 && state.settings.houseRules.doubleGo) {
-        player.money += 200;
-        state.logs.push(`${player.name} đáp đúng ô Bắt Đầu — thưởng gấp đôi (+$200)!`);
-      }
-      clearModals(state);
-      break;
-    }
-  }
-}
-
-// ---------- Cards ----------
-
-function drawAndApplyCard(state: GameState, player: Player, type: 'chance' | 'community_chest') {
-  const deck = type === 'chance' ? CHANCE_CARDS : COMMUNITY_CARDS;
-  const card = deck[Math.floor(Math.random() * deck.length)];
-  const beforePos = player.position;
-
-  const { events } = applyCard(state, player, card);
-  events.forEach((e) => state.logs.push(e));
-  state.activeCard = { type, text: card.text };
-
-  // Nợ âm tiền sau hiệu ứng (repairs / money / moneyPerPlayer)
-  if (player.money < 0) {
-    const debt = Math.abs(player.money);
-    player.money = 0;
-    setDebt(state, player, debt, 'bank', 'other');
-    return;
-  }
-
-  // Thẻ đưa vào tù
-  if (player.inJail) {
-    clearModals(state);
-    state.activeModal = 'jail';
-    state.modalPayload = { tileId: 10 };
-    return;
-  }
-
-  // Thẻ di chuyển → giải quyết ô mới (nếu là ô có hành động)
-  if (player.position !== beforePos) {
-    const newTile = getTile(player.position);
-    if (['property', 'railroad', 'utility', 'tax'].includes(newTile.type)) {
-      resolveTileLanding(state, player, newTile);
-      return;
-    }
-  }
-
-  // Mặc định: hiện modal thẻ
-  state.currentActionRequired = 'none';
-  state.activeModal = type;
-  state.modalPayload = { cardText: card.text };
 }
 
 // ---------- Buy ----------
