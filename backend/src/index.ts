@@ -27,6 +27,7 @@ import {
   settleRaisedFunds,
   passBuy,
   finishBuild,
+  confirmLanding,
 } from './game/gameEngine';
 import { RoomSettings } from './game/types';
 import { ReconnectRegistry } from './realtime/reconnect';
@@ -299,6 +300,22 @@ io.on('connection', (socket) => {
 
     io.to(roomCode.toUpperCase()).emit('game_state_update', { gameState: room.gameState, lastEvent: event });
     armTurnTimer(roomCode);
+  });
+
+  // 7b. Xác nhận hậu quả đáp ô (confirm_landing)
+  socket.on('confirm_landing', ({ roomCode }) => {
+    const room = getRoom(roomCode);
+    if (!room || !room.gameState) return;
+
+    const activePlayer = room.gameState.players[room.gameState.activePlayerIndex];
+    if (activePlayer.id !== socket.id) {
+      socket.emit('error_message', { message: 'Không phải lượt chơi của bạn!' });
+      return;
+    }
+
+    const { state, event } = confirmLanding(room.gameState);
+    room.gameState = state;
+    io.to(roomCode.toUpperCase()).emit('game_state_update', { gameState: room.gameState, lastEvent: event });
   });
 
   // 8. Tuyên bố phá sản

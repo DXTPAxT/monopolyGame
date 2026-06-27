@@ -40,6 +40,9 @@ export const EVENTS = {
     // Jail
     JAIL_ACTION: 'jail_action',
 
+    // Landing confirmation
+    CONFIRM_LANDING: 'confirm_landing',
+
     // Bankruptcy & payments
     DECLARE_BANKRUPTCY: 'declare_bankruptcy',
     SETTLE_FUNDS: 'settle_funds',
@@ -180,6 +183,10 @@ export interface SelectSkinPayload {
 export interface SendChatPayload {
   roomCode: string;
   message: string;
+}
+
+export interface ConfirmLandingPayload {
+  roomCode: string;
 }
 
 // ============================================================
