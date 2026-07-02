@@ -26,7 +26,7 @@ export function HelpButton() {
 
       {open && (
         // full-screen dim overlay, click backdrop to close; centered scrollable panel
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 pt-24" onClick={() => setOpen(false)}>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4" onClick={() => setOpen(false)}>
           <div
             role="dialog"
             aria-modal="true"

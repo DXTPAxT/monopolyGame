@@ -185,7 +185,8 @@ export default function App() {
             </div>
 
             {/* Cột phải: Panel quản lý trạng thái, chat & logs - Khóa rộng 260px để bàn cờ luôn là tâm điểm */}
-            <div className="hidden md:flex w-full md:w-[260px] flex-col gap-4 overflow-hidden h-full shrink-0">
+            {!isMobile && (
+              <div className="w-full md:w-[260px] flex flex-col gap-4 overflow-hidden h-full shrink-0">
               
               {/* Sidebar danh sách người chơi Glassmorphism */}
               <div className="flex-[4] bg-slate-900/20 backdrop-blur-md border border-slate-800/80 rounded-2xl p-3.5 overflow-hidden flex flex-col shadow-2xl">
@@ -230,6 +231,7 @@ export default function App() {
               </button>
 
             </div>
+            )}
 
           {/* MOBILE: thanh tab đáy + drawer panel (tái dùng panel desktop) */}
           {isMobile && (
