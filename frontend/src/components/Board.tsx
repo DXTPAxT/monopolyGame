@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { CenterStageControls } from './CenterStageControls';
 import { BuildModal } from './modals/BuildModal';
 import { GameBoard3D } from './scene3d/GameBoard3D';
+import { useViewport } from '../hooks/useViewport';
+import { BottomSheet } from './mobile/BottomSheet';
 
 import type { GameState, Player, TileMetadata } from '../types/game';
 import boardDataRaw from '../data/board.json';
@@ -46,6 +48,8 @@ export function Board({
   onAnimationStatusChange,
 }: BoardProps) {
   const { tiles, players, activePlayerIndex, dice, diceRolled, currentActionRequired, pendingPayment, winnerId } = gameState;
+
+  const { isMobile } = useViewport();
 
   // State vị trí hiển thị của quân cờ (visual position) để chạy animation di chuyển
   const [visualPositions, setVisualPositions] = useState<Record<string, number>>({});
@@ -551,6 +555,68 @@ export function Board({
     }
   };
 
+  // ─── HUD DOM cho mobile (dính đáy, kéo modal ra khỏi mặt bàn 3D) ───
+  const renderMobileHud = () => {
+    const modalOpen = !!gameState.activeModal && isAnimationDone;
+
+    // Badge kết quả xúc xắc rút gọn cho thanh đáy.
+    const diceBadge = (
+      <div className="flex items-center justify-center gap-2 text-xs font-bold">
+        {localDiceRolling ? (
+          <span className="text-indigo-300 uppercase tracking-wider animate-pulse">🎲 Đang đổ xúc xắc...</span>
+        ) : diceRevealActive ? (
+          <span className="text-cyan-300 uppercase tracking-wider">🎲 {dice[0]} + {dice[1]} = {dice[0] + dice[1]}</span>
+        ) : !diceRolled && isMyTurn ? (
+          <span className="text-indigo-300 uppercase tracking-wider animate-pulse">🎲 Đến lượt bạn — đổ xúc xắc!</span>
+        ) : diceRolled ? (
+          <span className="text-slate-300 font-mono">🎲 {dice[0]} + {dice[1]} = <span className="text-emerald-400 font-black">{dice[0] + dice[1]}</span></span>
+        ) : (
+          <span className="text-slate-500 uppercase tracking-wider">Chờ tới lượt...</span>
+        )}
+      </div>
+    );
+
+    return (
+      <>
+        {/* Thanh HUD dính đáy (trên thanh nav 52px). Ẩn khi modal mở để nhường chỗ sheet. */}
+        {!modalOpen && (
+          <div
+            className="md:hidden fixed inset-x-0 z-40 bg-slate-950/92 backdrop-blur-md border-t border-slate-800 px-3 pt-2.5 pb-2 flex flex-col items-center gap-2"
+            style={{ bottom: 'calc(52px + env(safe-area-inset-bottom))' }}
+          >
+            {diceBadge}
+            {isAnimationDone && !gameState.activeModal && (
+              <div className="w-full max-w-[340px] flex justify-center">
+                <CenterStageControls
+                  isMyTurn={isMyTurn}
+                  currentActionRequired={currentActionRequired}
+                  diceRolled={diceRolled}
+                  pendingPayment={pendingPayment}
+                  winnerId={winnerId}
+                  isHost={playerId === hostId}
+                  inJail={!!activePlayer?.inJail}
+                  hasJailCard={(activePlayer?.getOutOfJailCards || 0) > 0}
+                  rollDice={rollDice}
+                  buyProperty={buyProperty}
+                  endTurn={endTurn}
+                  declareBankruptcy={declareBankruptcy}
+                  restartGame={restartGame}
+                  jailAction={jailAction}
+                  settleFunds={settleFunds}
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Modal center-stage → BottomSheet (tái dùng renderCenterStageModal) */}
+        <BottomSheet open={modalOpen} onClose={() => { /* modal điều khiển bởi game state, không tự đóng */ }} title="Hành động">
+          <div className="pb-2">{renderCenterStageModal()}</div>
+        </BottomSheet>
+      </>
+    );
+  };
+
   // HUD content rendered inside 3D scene
   const hudContent = (
     <div className="bg-slate-950/90 backdrop-blur-md border border-slate-800/65 rounded-2xl shadow-2xl p-4.5 flex flex-col items-center gap-3 w-full">
@@ -703,8 +769,9 @@ export function Board({
         diceRevealActive={diceRevealActive}
         isAnimationDone={isAnimationDone}
         winnerId={winnerId}
-        hudContent={hudContent}
+        hudContent={isMobile ? null : hudContent}
       />
+      {isMobile && renderMobileHud()}
     </div>
   );
 }
