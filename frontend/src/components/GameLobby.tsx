@@ -117,7 +117,7 @@ export function GameLobby({
                 onChange={(e) => setName(e.target.value)}
                 maxLength={15}
                 aria-label="Tên hiển thị của bạn"
-                className="w-full bg-slate-950/80 border border-slate-800 rounded-2xl px-4 py-3 text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                className="w-full bg-slate-950/80 border border-slate-800 rounded-2xl px-4 py-3 text-base md:text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
               />
             </div>
 
@@ -125,7 +125,7 @@ export function GameLobby({
               <button
                 disabled={!name.trim() || !connected}
                 onClick={handleCreate}
-                className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-3.5 px-4 rounded-2xl transition-all shadow-lg hover:shadow-indigo-600/20 active:scale-[0.98]"
+                className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-3.5 px-4 rounded-2xl transition-all shadow-lg hover:shadow-indigo-600/20 active:scale-[0.98] min-h-[48px]"
               >
                 <Play size={18} />
                 Tạo Phòng
@@ -139,12 +139,12 @@ export function GameLobby({
                   onChange={(e) => setCode(e.target.value)}
                   maxLength={6}
                   aria-label="Mã phòng để tham gia"
-                  className="w-full bg-slate-950/80 border border-slate-800 rounded-2xl px-4 py-1.5 text-center text-slate-100 placeholder-slate-600 uppercase focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  className="w-full bg-slate-950/80 border border-slate-800 rounded-2xl px-4 py-1.5 text-center text-base md:text-sm text-slate-100 placeholder-slate-600 uppercase focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                 />
                 <button
                   disabled={!name.trim() || !code.trim() || !connected}
                   onClick={handleJoin}
-                  className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-1.5 px-4 rounded-2xl transition-all shadow-lg hover:shadow-emerald-600/20 active:scale-[0.98]"
+                  className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-1.5 px-4 rounded-2xl transition-all shadow-lg hover:shadow-emerald-600/20 active:scale-[0.98] min-h-[48px]"
                 >
                   <Key size={16} />
                   Tham Gia
@@ -166,7 +166,7 @@ export function GameLobby({
   // Màn hình phòng chờ (Đã vào phòng)
   return (
     <div className="min-h-screen flex justify-center bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900 via-slate-950 to-black p-4">
-      <div className="my-auto w-full max-w-4xl grid md:grid-cols-2 gap-6 bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 shadow-2xl">
+      <div className="my-auto w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 shadow-2xl">
         
         {/* Cột trái: Người chơi & Mã phòng */}
         <div className="flex flex-col justify-between p-2">
@@ -223,7 +223,7 @@ export function GameLobby({
             {/* Chọn quân cờ (skin) */}
             <div className="mb-5">
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Chọn quân cờ</label>
-              <div className="grid grid-cols-8 gap-1.5">
+              <div className="grid grid-cols-4 gap-1.5">
                 {TOKEN_SKINS.map((skin) => {
                   const takenByOther = players.some((p) => p.tokenSkin === skin.id && p.id !== playerId);
                   const mine = mySkin === skin.id;
@@ -234,7 +234,7 @@ export function GameLobby({
                       aria-label={`Chọn quân cờ ${skin.name}${takenByOther ? ' (đã bị chọn)' : mine ? ' (đang chọn)' : ''}`}
                       disabled={takenByOther}
                       onClick={() => selectSkin(skin.id)}
-                      className={`aspect-square rounded-xl text-xl flex items-center justify-center border transition ${
+                      className={`aspect-square rounded-xl text-xl flex items-center justify-center border transition min-h-[56px] ${
                         mine
                           ? 'border-indigo-500 bg-indigo-500/20 ring-1 ring-indigo-400'
                           : takenByOther
@@ -389,7 +389,7 @@ export function GameLobby({
               <button
                 disabled={players.length < 2}
                 onClick={startGame}
-                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-extrabold py-4 px-6 rounded-2xl transition-all shadow-xl hover:shadow-cyan-600/10 active:scale-[0.98]"
+                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-extrabold py-4 px-6 rounded-2xl transition-all shadow-xl hover:shadow-cyan-600/10 active:scale-[0.98] min-h-[48px]"
               >
                 <Play size={20} fill="currentColor" />
                 Bắt Đầu Trận Đấu
@@ -440,7 +440,7 @@ export function GameLobby({
               value={chatMsg}
               onChange={(e) => setChatMsg(e.target.value)}
               aria-label="Nhập tin nhắn trò chuyện phòng chờ"
-              className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 placeholder-slate-650 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-base md:text-sm text-slate-200 placeholder-slate-650 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
             <button
               type="submit"
