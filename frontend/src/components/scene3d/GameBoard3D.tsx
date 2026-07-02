@@ -1,5 +1,5 @@
 import { useRef, useMemo, useEffect } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { Token3D } from './Token3D';
@@ -28,7 +28,7 @@ interface GameBoard3DProps {
   diceRevealActive: boolean;
   isAnimationDone: boolean;
   winnerId?: string;
-  hudContent: React.ReactNode;
+  hudContent: React.ReactNode | null;
 }
 
 // ─── Theme Colors (BRIGHTER for readability) ────────────────────────────────
@@ -670,6 +670,32 @@ function Tile3D({
   );
 }
 
+// ─── Camera thích ứng: khung dọc thì lùi xa + nghiêng để bàn 11 đơn vị vừa bề ngang ───
+function ResponsiveCamera() {
+  const { camera, size } = useThree();
+
+  useEffect(() => {
+    const portrait = size.height > size.width;
+    // aspect = rộng / cao; càng nhỏ (màn càng dọc) càng phải lùi camera.
+    const aspect = size.width / size.height;
+    const persp = camera as THREE.PerspectiveCamera;
+
+    if (portrait) {
+      // Dọc: nâng cao & lùi xa; màn càng hẹp lùi càng nhiều. Nghiêng gần top-down.
+      const dist = aspect < 0.55 ? 20 : 17; // rất hẹp (điện thoại) vs hẹp vừa
+      persp.position.set(0, dist * 0.92, dist * 0.55);
+      persp.fov = 55;
+    } else {
+      // Ngang/desktop: GIỮ NGUYÊN như hiện tại.
+      persp.position.set(0, 10, 12);
+      persp.fov = 50;
+    }
+    persp.updateProjectionMatrix();
+  }, [camera, size.width, size.height]);
+
+  return null;
+}
+
 // ─── Main Component 3D Board Canvas ─────────────────────────────────────────
 export function GameBoard3D({
   gameState,
@@ -700,6 +726,7 @@ export function GameBoard3D({
         gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
         style={{ width: '100%', height: '100%', outline: 'none' }}
       >
+        <ResponsiveCamera />
         {/* ─── BRIGHT Lighting ─── */}
         <ambientLight intensity={1.2} />
         <directionalLight
@@ -726,7 +753,7 @@ export function GameBoard3D({
           enableDamping
           dampingFactor={0.06}
           minDistance={6}
-          maxDistance={20}
+          maxDistance={28}
           maxPolarAngle={Math.PI / 2.5}
           target={[0, 0, 0]}
         />
@@ -800,20 +827,22 @@ export function GameBoard3D({
           </group>
         )}
 
-        {/* ─── 5. Center HUD — FLAT on board surface ─── */}
-        <Html
-          center
-          transform
-          position={[0, 0.08, 0]}
-          rotation={[-Math.PI / 2, 0, 0]}
-          scale={0.56}
-          pointerEvents="auto"
-          style={{ pointerEvents: 'auto' }}
-        >
-          <div className="w-[320px] pointer-events-auto">
-            {hudContent}
-          </div>
-        </Html>
+        {/* ─── 5. Center HUD — FLAT on board surface (chỉ desktop) ─── */}
+        {hudContent && (
+          <Html
+            center
+            transform
+            position={[0, 0.08, 0]}
+            rotation={[-Math.PI / 2, 0, 0]}
+            scale={0.56}
+            pointerEvents="auto"
+            style={{ pointerEvents: 'auto' }}
+          >
+            <div className="w-[320px] pointer-events-auto">
+              {hudContent}
+            </div>
+          </Html>
+        )}
 
       </Canvas>
     </div>
