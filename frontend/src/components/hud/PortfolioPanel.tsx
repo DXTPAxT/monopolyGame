@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Briefcase, Home, Banknote, Lock, Unlock, ChevronDown, BadgeDollarSign } from 'lucide-react';
 import type { GameState } from '../../types/game';
-import { netWorth, myProperties, currentRent } from '../../hooks/useGameSelectors';
+import { netWorth, myProperties, currentRent, getTileMeta } from '../../hooks/useGameSelectors';
 import { formatMoney, buildingLabel } from '../../utils/format';
 
 interface PortfolioPanelProps {
@@ -78,7 +78,11 @@ export function PortfolioPanel({
           {props.map(({ meta, state }) => {
             const isProperty = meta.type === 'property';
             const sellable = isMyTurn && isProperty && (state.houses > 0 || state.hotel);
-            const canMortgage = isMyTurn && !state.mortgaged && state.houses === 0 && !state.hotel;
+            const groupHasBuildings = isProperty && gameState.tiles.some(t => {
+              if (t.houses === 0 && !t.hotel) return false;
+              return getTileMeta(t.id).group === meta.group;
+            });
+            const canMortgage = isMyTurn && !state.mortgaged && state.houses === 0 && !state.hotel && !groupHasBuildings;
             const canUnmortgage = isMyTurn && state.mortgaged;
             const rent = currentRent(gameState, meta.id);
 
