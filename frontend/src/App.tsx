@@ -11,6 +11,9 @@ import { AlertCircle, X, LogOut, Volume2, VolumeX } from 'lucide-react';
 import { isSoundMuted, setSoundMuted } from './utils/sound';
 import { HelpButton } from './components/HelpButton';
 import { getBoardTheme } from './data/boardThemes';
+import { useViewport } from './hooks/useViewport';
+import { BottomSheet } from './components/mobile/BottomSheet';
+import { MobileNavBar, type MobilePanel } from './components/mobile/MobileNavBar';
 
 export default function App() {
   const {
@@ -53,6 +56,11 @@ export default function App() {
   const toggleMute = () => { const v = !muted; setSoundMuted(v); setMuted(v); };
   const boardThemeBg = getBoardTheme(gameState?.settings?.boardSkin).appBg;
 
+  const { isMobile } = useViewport();
+  const [openPanel, setOpenPanel] = useState<MobilePanel | null>(null);
+  // Đóng drawer khi chuyển về desktop để tránh kẹt overlay.
+  useEffect(() => { if (!isMobile) setOpenPanel(null); }, [isMobile]);
+
   const [isAnimDone, setIsAnimDone] = useState(true);
   const [visualPlayers, setVisualPlayers] = useState<Player[]>([]);
 
@@ -80,11 +88,11 @@ export default function App() {
   }, [gameState, isAnimDone]);
 
   return (
-    <div className="h-screen w-screen bg-slate-950 text-slate-100 flex flex-col overflow-hidden relative select-none">
+    <div className="h-[100dvh] w-screen bg-slate-950 text-slate-100 flex flex-col overflow-hidden relative select-none">
       
       {/* Toast thông báo lỗi */}
       {errorMsg && (
-        <div role="alert" className="fixed top-6 right-6 z-50 max-w-sm bg-red-950/90 border border-red-500/30 text-red-200 px-4 py-3.5 rounded-2xl shadow-2xl flex items-center justify-between gap-3 animate-bounce-slow backdrop-blur-md">
+        <div role="alert" className="fixed top-4 right-4 left-4 md:left-auto z-[70] max-w-sm md:max-w-sm bg-red-950/90 border border-red-500/30 text-red-200 px-4 py-3.5 rounded-2xl shadow-2xl flex items-center justify-between gap-3 animate-bounce-slow backdrop-blur-md">
           <div className="flex items-center gap-2">
             <AlertCircle size={18} className="text-red-400 shrink-0" aria-hidden="true" />
             <span className="text-xs font-semibold">{errorMsg}</span>
@@ -153,7 +161,7 @@ export default function App() {
           )}
 
           {/* Layout chính - Tận dụng toàn bộ màn hình */}
-          <div className="flex-1 overflow-hidden flex flex-col md:flex-row gap-4 p-4 items-stretch justify-center w-full h-full max-w-none">
+          <div className="flex-1 overflow-hidden flex flex-col md:flex-row gap-4 p-4 max-md:pb-20 items-stretch justify-center w-full h-full max-w-none">
             
             {/* Cột trái: Bàn cờ 11x11 với hiệu ứng Spotlight sòng bài - Chiếm phần lớn diện tích (75-80%) */}
             <div className={`flex-grow md:flex-1 flex flex-col items-center justify-center p-2 bg-slate-950 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] ${boardThemeBg} border border-slate-900 rounded-3xl shadow-[0_0_50px_rgba(99,102,241,0.05)] overflow-hidden relative`}>
@@ -177,7 +185,7 @@ export default function App() {
             </div>
 
             {/* Cột phải: Panel quản lý trạng thái, chat & logs - Khóa rộng 260px để bàn cờ luôn là tâm điểm */}
-            <div className="w-full md:w-[260px] flex flex-col gap-4 overflow-hidden h-full shrink-0">
+            <div className="hidden md:flex w-full md:w-[260px] flex-col gap-4 overflow-hidden h-full shrink-0">
               
               {/* Sidebar danh sách người chơi Glassmorphism */}
               <div className="flex-[4] bg-slate-900/20 backdrop-blur-md border border-slate-800/80 rounded-2xl p-3.5 overflow-hidden flex flex-col shadow-2xl">
@@ -222,6 +230,49 @@ export default function App() {
               </button>
 
             </div>
+
+          {/* MOBILE: thanh tab đáy + drawer panel (tái dùng panel desktop) */}
+          {isMobile && (
+            <>
+              <MobileNavBar active={openPanel} onOpen={(p) => setOpenPanel((cur) => (cur === p ? null : p))} />
+
+              <BottomSheet open={openPanel === 'players'} onClose={() => setOpenPanel(null)} title="Người chơi" heightMode="tall">
+                <PlayerList
+                  players={visualPlayers.length > 0 ? visualPlayers : gameState.players}
+                  activePlayerIndex={gameState.activePlayerIndex}
+                  tiles={gameState.tiles}
+                  playerId={playerId}
+                />
+                <button
+                  onClick={() => {
+                    try { localStorage.removeItem('ctp_token'); localStorage.removeItem('ctp_room'); } catch { /* ignore */ }
+                    window.location.reload();
+                  }}
+                  className="w-full mt-4 py-3 bg-slate-800 border border-slate-700 text-slate-300 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 active:scale-[0.98]"
+                >
+                  <LogOut size={14} aria-hidden="true" /> Thoát ra Sảnh
+                </button>
+              </BottomSheet>
+
+              <BottomSheet open={openPanel === 'portfolio'} onClose={() => setOpenPanel(null)} title="Tài sản của tôi" heightMode="tall">
+                <PortfolioPanel
+                  gameState={gameState}
+                  playerId={playerId}
+                  isMyTurn={isMyTurn}
+                  buildHouse={buildHouse}
+                  sellHouse={sellHouse}
+                  mortgageTile={mortgageTile}
+                  unmortgageTile={unmortgageTile}
+                  sellDeed={sellDeed}
+                  visualMoney={visualPlayers.find((p) => p.id === playerId)?.money}
+                />
+              </BottomSheet>
+
+              <BottomSheet open={openPanel === 'chat'} onClose={() => setOpenPanel(null)} title="Trò chuyện" heightMode="tall">
+                <ChatPanel chats={chats} sendChat={sendChat} />
+              </BottomSheet>
+            </>
+          )}
 
           </div>
         </div>
