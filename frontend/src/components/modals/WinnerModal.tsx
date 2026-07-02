@@ -27,7 +27,7 @@ export function WinnerModal({ gameState, isHost, restartGame }: WinnerModalProps
         role="dialog"
         aria-modal="true"
         aria-labelledby="winner-modal-title"
-        className="w-full max-w-md bg-gradient-to-b from-slate-900 to-slate-950 border border-amber-500/30 rounded-3xl p-7 shadow-2xl text-center"
+        className="w-[92vw] max-w-md bg-gradient-to-b from-slate-900 to-slate-950 border border-amber-500/30 rounded-3xl p-4 md:p-7 shadow-2xl text-center max-h-[85vh] overflow-y-auto"
       >
         <div className="flex justify-center mb-3">
           <Trophy size={56} className="text-amber-400 drop-shadow-[0_0_18px_rgba(251,191,36,0.6)] animate-bounce-slow" aria-hidden="true" />
@@ -62,7 +62,7 @@ export function WinnerModal({ gameState, isHost, restartGame }: WinnerModalProps
         {isHost ? (
           <button
             onClick={restartGame}
-            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-white font-black py-3 rounded-2xl text-sm uppercase tracking-wider transition active:scale-[0.98] shadow-lg"
+            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-white font-black py-3 rounded-2xl text-sm uppercase tracking-wider transition active:scale-[0.98] shadow-lg min-h-[48px]"
           >
             <RotateCcw size={16} aria-hidden="true" /> Chơi lại trận mới
           </button>

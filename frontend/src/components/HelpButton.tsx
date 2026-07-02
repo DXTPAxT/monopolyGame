@@ -31,7 +31,7 @@ export function HelpButton() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="help-modal-title"
-            className="w-full max-w-lg max-h-[72vh] overflow-y-auto bg-slate-900 border border-slate-700 rounded-3xl p-6 shadow-2xl"
+            className="w-[92vw] max-w-lg max-h-[85vh] overflow-y-auto bg-slate-900 border border-slate-700 rounded-3xl p-4 md:p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* header with title "Hướng dẫn chơi Cờ Tỷ Phú" + close (X) button calling setOpen(false) */}

@@ -29,7 +29,7 @@ export function InteractiveModal({
   onPass,
   onBankruptcy,
   onDismiss,
-  onEndTurn,
+  onEndTurn: _onEndTurn,
   onConfirm,
 }: InteractiveModalProps) {
   const { currentActionRequired, pendingPayment, players, tiles, activePlayerIndex, activeCard } = gameState;
