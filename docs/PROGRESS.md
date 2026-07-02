@@ -1,7 +1,7 @@
 # TIẾP NỐI DỰ ÁN — Cờ Tỷ Phú 3D (Handoff)
 
 > **Đọc file này đầu tiên khi mở session mới để tiếp tục.**
-> Cập nhật: 2026-06-23.
+> Cập nhật: 2026-07-02.
 
 ## Cách tiếp tục ở session mới
 Mở Claude Code trong thư mục dự án và nói đại ý:
@@ -70,7 +70,7 @@ Spec: `docs/specs/2026-06-24-fixes-and-houserules-design.md`. Backend **159 test
 
 ## VIỆC TIẾP THEO (ưu tiên)
 1. **Kiểm thử multiplayer thật (việc chính còn lại)**: mở 2 tab, chạy toàn bộ luồng mới — xây nhà (lần 1→4 nhà, lần 2→KS), cầm cố, ra tù, phá sản gom tiền, doubles, **reconnect** (đóng tab rồi mở lại trong 60s), **turn-timer** (bật mode Nhanh), **thắng nhanh (3 nhóm màu / trọn 1 cạnh / cả 4 nhà ga)**. Sửa bug phát sinh.
-2. **Responsive/mobile** pass (T4.4 — layout đang tối ưu desktop). *T4.5/T4.6 đã xong.*
+2. ~~**Responsive/mobile** pass (T4.4 — layout đang tối ưu desktop).~~ **ĐÃ XONG** (2026-07-02). Xem spec `docs/specs/2026-07-02-mobile-ui-design.md`. *T4.5/T4.6 đã xong.*
 3. (Tùy chọn) Token/nhà **WebGL thật** thay CSS-3D; áp theme sâu hơn cho board/dice skin; T2.1 tách `socketHandlers.ts`.
 
 ## Cách chạy
@@ -80,6 +80,19 @@ cd frontend && npm install --legacy-peer-deps && npm run dev   # cổng 5173
 ```
 Test: `cd backend && npm test` · `cd frontend && npx vitest run`.
 Lưu ý: frontend cần `--legacy-peer-deps` (xung đột peer eslint có sẵn).
+
+## ĐÃ XONG THÊM (2026-07-02, Mobile UI — T4.4)
+Spec: `docs/specs/2026-07-02-mobile-ui-design.md`. Plan: `docs/superpowers/plans/2026-07-02-mobile-ui.md`.
+- **Hook `useViewport`**: phát hiện mobile (< 768px) / portrait / landscape; hàm thuần `computeViewport` + hook React; 4 unit test xanh.
+- **BottomSheet primitive**: tấm trượt đáy với drag-to-dismiss, backdrop, Escape, khoá cuộn nền, safe-area.
+- **MobileNavBar**: 3 tab dính đáy (Người chơi / Tài sản / Chat), mở drawer tái dùng panel desktop.
+- **App.tsx mobile**: ẩn sidebar 260px trên mobile, thêm nav đáy + 3 drawer BottomSheet, `100dvh`, toast responsive, padding đáy chừa nav.
+- **CSS nền**: `viewport-fit=cover` (index.html), `touch-action: manipulation` (index.css).
+- **Camera 3D thích ứng**: khung dọc → camera lùi xa + nghiêng; guard `<Html>` HUD-trên-bàn (truyền null khi mobile); `maxDistance=28` cho pinch zoom.
+- **HUD DOM mobile (Board.tsx)**: thanh dice badge + CenterStageControls dính đáy; modal center-stage → BottomSheet.
+- **Lobby responsive**: grid 1 cột mobile, `text-base` input (chống iOS auto-zoom), quân `grid-cols-4` + `min-h-[56px]`, nút `min-h-[48px]`.
+- **Modal phụ**: WinnerModal `92vw/max-h-[85vh]`, HelpButton `92vw/max-h-[85vh]`, responsive padding.
+- Verify: FE `tsc -b` + `vite build` exit 0, **49 test xanh** (4 useViewport + 45 useGameSelectors).
 
 ## Lệnh kiểm tra nhanh trạng thái
 - Backend xanh: `cd backend && npm test` → mong đợi 175+ pass.
